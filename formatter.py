@@ -424,9 +424,7 @@ document.addEventListener('DOMContentLoaded', () => {{
     setInterval(updateTimeStatus, 60000); // Check time every minute
     
     // fetchVotes is now called inside checkAuthStatus if logged in
-    setInterval(() => {{
-        if (authToken) fetchVotes();
-    }}, 30000);
+    // Automatic polling is disabled. Users must refresh manually or vote to see updates.
     initFireworksCanvas();
 }});
 
