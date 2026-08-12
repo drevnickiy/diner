@@ -38,6 +38,9 @@
                     </p>
                 </div>
                 <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                    <button id="config-db-btn" onclick="configureFirebaseUrl()" style="background: #475569; color: #ffffff; border: none; padding: 8px 14px; border-radius: 8px; font-weight: 600; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: all 0.2s;">
+                        ☁️ Налаштувати БД
+                    </button>
                     <button id="fireworks-btn" onclick="launchFireworks()" style="background: linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%); color: #ffffff; border: none; padding: 8px 14px; border-radius: 8px; font-weight: 700; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 4px 12px rgba(236,72,153,0.3); transition: transform 0.1s;">
                         🎆 Феєрверк!
                     </button>
@@ -297,6 +300,10 @@
 let currentVotes = [];
 let lastWinner = null;
 
+// Firebase Realtime Database URL for global sync on GitHub Pages
+// Set your Firebase Realtime DB URL here or via settings
+let FIREBASE_DB_URL = localStorage.getItem('diner_firebase_url') || '';
+
 document.addEventListener('DOMContentLoaded', () => {
     const savedName = localStorage.getItem('diner_user_name');
     if (savedName) {
@@ -304,11 +311,33 @@ document.addEventListener('DOMContentLoaded', () => {
         if (input) input.value = savedName;
     }
     fetchVotes();
-    setInterval(fetchVotes, 4000);
+    setInterval(fetchVotes, 3000);
     initFireworksCanvas();
 });
 
+function getTodayStr() {
+    return new Date().toISOString().split('T')[0];
+}
+
 async function fetchVotes() {
+    const today = getTodayStr();
+
+    // 1. Try Firebase Realtime Database (Cloud DB for GitHub Pages)
+    if (FIREBASE_DB_URL) {
+        try {
+            const url = `${FIREBASE_DB_URL.replace(/\/$/, '')}/votes/${today}.json`;
+            const res = await fetch(url);
+            if (res.ok) {
+                const data = await res.json();
+                const votesList = data ? Object.values(data) : [];
+                currentVotes = votesList;
+                renderVotes(currentVotes);
+                return;
+            }
+        } catch (e) {}
+    }
+
+    // 2. Try Local Server API (http://localhost:5050/api/votes)
     try {
         const res = await fetch('/api/votes');
         if (res.ok) {
@@ -320,11 +349,13 @@ async function fetchVotes() {
             }
         }
     } catch (e) {}
+
+    // 3. LocalStorage Fallback
     loadFromLocalStorage();
 }
 
 function loadFromLocalStorage() {
-    const today = new Date().toISOString().split('T')[0];
+    const today = getTodayStr();
     const key = 'diner_votes_' + today;
     try {
         const data = localStorage.getItem(key);
@@ -336,7 +367,7 @@ function loadFromLocalStorage() {
 }
 
 function saveToLocalStorage(votes) {
-    const today = new Date().toISOString().split('T')[0];
+    const today = getTodayStr();
     const key = 'diner_votes_' + today;
     localStorage.setItem(key, JSON.stringify(votes));
 }
@@ -457,6 +488,32 @@ async function handleVoteSubmit(event) {
         launchFireworks();
     }
 
+    const today = getTodayStr();
+    const voteData = {
+        name: name,
+        choice: choice,
+        restaurant: restaurant,
+        note: note,
+        updated_at: new Date().toISOString()
+    };
+
+    // 1. Try Firebase Realtime Database
+    if (FIREBASE_DB_URL) {
+        try {
+            const url = `${FIREBASE_DB_URL.replace(/\/$/, '')}/votes/${today}/${encodeURIComponent(name)}.json`;
+            const res = await fetch(url, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(voteData)
+            });
+            if (res.ok) {
+                fetchVotes();
+                return;
+            }
+        } catch (e) {}
+    }
+
+    // 2. Try Local Server API
     try {
         const res = await fetch('/api/votes', {
             method: 'POST',
@@ -473,22 +530,35 @@ async function handleVoteSubmit(event) {
         }
     } catch (e) {}
 
+    // 3. Fallback to LocalStorage
     const idx = currentVotes.findIndex(v => v.name.toLowerCase() === name.toLowerCase());
-    const newVote = { name, choice, restaurant, note, updated_at: new Date().toISOString() };
     if (idx >= 0) {
-        currentVotes[idx] = newVote;
+        currentVotes[idx] = voteData;
     } else {
-        currentVotes.push(newVote);
+        currentVotes.push(voteData);
     }
     saveToLocalStorage(currentVotes);
     renderVotes(currentVotes);
 }
 
 async function deleteVote(name) {
+    const today = getTodayStr();
+
+    // 1. Try Firebase Realtime Database
+    if (FIREBASE_DB_URL) {
+        try {
+            const url = `${FIREBASE_DB_URL.replace(/\/$/, '')}/votes/${today}/${encodeURIComponent(name)}.json`;
+            const res = await fetch(url, { method: 'DELETE' });
+            if (res.ok) {
+                fetchVotes();
+                return;
+            }
+        } catch (e) {}
+    }
+
+    // 2. Try Local Server API
     try {
-        const res = await fetch(`/api/votes?name=${encodeURIComponent(name)}`, {
-            method: 'DELETE'
-        });
+        const res = await fetch(`/api/votes?name=${encodeURIComponent(name)}`, { method: 'DELETE' });
         if (res.ok) {
             const data = await res.json();
             if (data.success) {
@@ -499,10 +569,24 @@ async function deleteVote(name) {
         }
     } catch (e) {}
 
+    // 3. Fallback to LocalStorage
     currentVotes = currentVotes.filter(v => v.name.toLowerCase() !== name.toLowerCase());
     saveToLocalStorage(currentVotes);
     renderVotes(currentVotes);
 }
+
+function configureFirebaseUrl() {
+    const current = FIREBASE_DB_URL || '';
+    const input = prompt('Введіть URL вашої бази даних Firebase Realtime DB:
+(наприклад: https://diner-votes-default-rtdb.firebaseio.com)', current);
+    if (input !== null) {
+        FIREBASE_DB_URL = input.trim();
+        localStorage.setItem('diner_firebase_url', FIREBASE_DB_URL);
+        alert(FIREBASE_DB_URL ? '✅ URL хмарної бази даних збережено!' : 'ℹ️ Хмарну базу даних вимкнено.');
+        fetchVotes();
+    }
+}
+</script>
 
 function copyVotesForTelegram() {
     if (!currentVotes || currentVotes.length === 0) {
