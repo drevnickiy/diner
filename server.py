@@ -1,10 +1,13 @@
 import os
 import json
+import time
 from http.server import HTTPServer, SimpleHTTPRequestHandler
 from urllib.parse import parse_qs, urlparse
 from datetime import datetime
 
 import db
+
+ip_requests = {}
 
 DISQUALIFIED_ROLES = ['фраєр', 'барига', 'чорт', 'шерсть', 'опущений']
 
@@ -18,6 +21,17 @@ class VotingHandler(SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
         public_dir = os.path.join(os.path.dirname(__file__), 'public')
         super().__init__(*args, directory=public_dir, **kwargs)
+
+    def _check_rate_limit(self):
+        client_ip = self.client_address[0]
+        now = time.time()
+        if client_ip not in ip_requests:
+            ip_requests[client_ip] = []
+        ip_requests[client_ip] = [t for t in ip_requests[client_ip] if now - t < 60]
+        if len(ip_requests[client_ip]) >= 10:
+            return False
+        ip_requests[client_ip].append(now)
+        return True
 
     def _set_cors_headers(self):
         self.send_header('Access-Control-Allow-Origin', '*')
@@ -72,6 +86,10 @@ class VotingHandler(SimpleHTTPRequestHandler):
         self.wfile.write(json.dumps(data, ensure_ascii=False).encode('utf-8'))
 
     def do_GET(self):
+        
+        if not self._check_rate_limit():
+            self._send_json(429, {'success': False, 'error': 'Забагато запитів. Зачекайте 1 хвилину.'})
+            return
         parsed = urlparse(self.path)
         if parsed.path == '/api/me':
             user = self._get_auth_user()
@@ -95,6 +113,10 @@ class VotingHandler(SimpleHTTPRequestHandler):
             super().do_GET()
 
     def do_POST(self):
+        
+        if not self._check_rate_limit():
+            self._send_json(429, {'success': False, 'error': 'Забагато запитів. Зачекайте 1 хвилину.'})
+            return
         parsed = urlparse(self.path)
         
         if parsed.path in ('/api/register', '/api/login'):
@@ -169,6 +191,10 @@ class VotingHandler(SimpleHTTPRequestHandler):
             self.end_headers()
 
     def do_DELETE(self):
+        
+        if not self._check_rate_limit():
+            self._send_json(429, {'success': False, 'error': 'Забагато запитів. Зачекайте 1 хвилину.'})
+            return
         parsed = urlparse(self.path)
         if parsed.path == '/api/votes':
             user = self._get_auth_user()

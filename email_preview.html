@@ -481,7 +481,7 @@ async function handleAuth(event, type) {
             errorEl.style.display = 'block';
         }
     } catch (e) {
-        errorEl.innerText = 'Помилка з'єднання із сервером.';
+        errorEl.innerText = "Помилка з'єднання із сервером.";
         errorEl.style.display = 'block';
     }
 }
@@ -506,8 +506,6 @@ let currentVotes = [];
 let lastWinner = null;
 let selectedDriver = null;
 
-// Firebase Realtime Database URL for global sync on GitHub Pages
-let FIREBASE_DB_URL = localStorage.getItem('diner_firebase_url') || 'https://diner-votes-default-rtdb.firebaseio.com';
 
 document.addEventListener('DOMContentLoaded', () => {
     // Auto-clean old days' votes from localStorage
@@ -530,8 +528,6 @@ document.addEventListener('DOMContentLoaded', () => {
     updateTimeStatus();
     checkAuthStatus();
     setInterval(updateTimeStatus, 60000); // Check time every minute
-    
-    fetchDriverFromCloud();
     // fetchVotes is now called inside checkAuthStatus if logged in
     setInterval(() => {
         if (authToken) fetchVotes();
@@ -611,34 +607,6 @@ function setSelectedDriver(driverName) {
     } else {
         localStorage.removeItem(getSelectedDriverKey());
     }
-    if (FIREBASE_DB_URL) {
-        try {
-            const today = getTodayStr();
-            const url = `${FIREBASE_DB_URL.replace(/\/$/, '')}/driver/${today}.json`;
-            fetch(url, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name: driverName, updated_at: new Date().toISOString() })
-            }).catch(e => {});
-        } catch(e) {}
-    }
-}
-
-async function fetchDriverFromCloud() {
-    if (FIREBASE_DB_URL) {
-        try {
-            const today = getTodayStr();
-            const url = `${FIREBASE_DB_URL.replace(/\/$/, '')}/driver/${today}.json`;
-            const res = await fetch(url);
-            if (res.ok) {
-                const data = await res.json();
-                if (data && data.name) {
-                    selectedDriver = data.name;
-                    localStorage.setItem(getSelectedDriverKey(), selectedDriver);
-                }
-            }
-        } catch(e) {}
-    }
 }
 
 const DISQUALIFIED_ROLES = ['Фраєр', 'Барига', 'Чорт', 'Шерсть', 'Опущений'];
@@ -702,243 +670,6 @@ async function fetchVotes() {
     const today = getTodayStr();
 
     // 1. Try Firebase Realtime Database (Cloud DB for GitHub Pages)
-    if (FIREBASE_DB_URL) {
-        try {
-            const url = `${FIREBASE_DB_URL.replace(/\/$/, '')}/votes/${today}.json`;
-            const res = await fetch(url);
-            if (res.ok) {
-                const data = await res.json();
-                const votesList = data ? Object.values(data) : [];
-                currentVotes = votesList;
-                renderVotes(currentVotes);
-                return;
-            }
-        } catch (e) {}
-    }
-
-    // 2. Local Server Fallback
-    try {
-        const res = await fetch('/api/votes', {
-            headers: { 'Authorization': `Bearer ${authToken}` }
-        });
-        const data = await res.json();
-        if (data.success) {
-            currentVotes = data.votes || [];
-            renderVotes(currentVotes, data.summary);
-            return;
-        }
-    } catch (e) {}
-
-    // 3. LocalStorage Fallback
-    loadFromLocalStorage();
-}
-
-function loadFromLocalStorage() {
-    const today = getTodayStr();
-    const key = 'diner_votes_' + today;
-    try {
-        const data = localStorage.getItem(key);
-        currentVotes = data ? JSON.parse(data) : [];
-    } catch (e) {
-        currentVotes = [];
-    }
-    renderVotes(currentVotes);
-}
-
-function saveToLocalStorage(votes) {
-    const today = getTodayStr();
-    const key = 'diner_votes_' + today;
-    localStorage.setItem(key, JSON.stringify(votes));
-}
-
-function renderVotes(votes, summary) {
-    updateTimeStatus();
-
-    const validVotes = votes.filter(v => !isDisqualifiedRole(v.role));
-    const goingVotes = validVotes.filter(v => v.choice === 'going');
-    const notGoingVotes = votes.filter(v => v.choice === 'not_going');
-    
-    document.getElementById('count-going').innerText = goingVotes.length;
-    document.getElementById('count-not-going').innerText = notGoingVotes.length;
-    document.getElementById('count-total').innerText = validVotes.length + notGoingVotes.length;
-
-    const total = (validVotes.length + notGoingVotes.length) || 1;
-    const goingPct = (goingVotes.length / total) * 100;
-    const notGoingPct = (notGoingVotes.length / total) * 100;
-
-    document.getElementById('progress-going').style.width = (total ? goingPct : 0) + '%';
-    document.getElementById('progress-not-going').style.width = (total ? notGoingPct : 0) + '%';
-
-    // Check & Render Driver Selection
-    let currentDriver = getSelectedDriver();
-    const driverStillGoing = goingVotes.some(v => v.name.toLowerCase() === (currentDriver || '').toLowerCase());
-    if (currentDriver && !driverStillGoing) {
-        if (goingVotes.length > 0) {
-            pickRandomDriver(false);
-        } else {
-            setSelectedDriver(null);
-            renderDriverBanner(null, 0);
-        }
-    } else {
-        renderDriverBanner(currentDriver, goingVotes.length);
-    }
-
-    // Calculate Restaurant Winner & Breakdown
-    let winnerName = summary ? summary.winner : null;
-    let winnerVotes = summary ? summary.winner_votes : 0;
-    let restTally = summary ? summary.restaurants : {};
-
-    if (!summary) {
-        restTally = {};
-        goingVotes.forEach(v => {
-            const r = v.restaurant || 'Будь-яке / Без різниці';
-            restTally[r] = (restTally[r] || 0) + 1;
-        });
-        let maxCount = 0;
-        for (const [r, count] of Object.entries(restTally)) {
-            if (count > maxCount) {
-                maxCount = count;
-                winnerName = r;
-                winnerVotes = count;
-            }
-        }
-    }
-
-    const winnerTitleEl = document.getElementById('winner-title');
-    const breakdownEl = document.getElementById('restaurant-breakdown');
-
-    if (winnerName && winnerVotes > 0) {
-        winnerTitleEl.innerHTML = `🎉 <strong>${escapeHtml(winnerName)}</strong> — ${winnerVotes} ${pluralVotes(winnerVotes)}!`;
-        if (lastWinner !== winnerName && goingVotes.length > 0) {
-            lastWinner = winnerName;
-            launchFireworks();
-        }
-    } else {
-        winnerTitleEl.innerText = 'Очікування перших авторитетних голосів...';
-    }
-
-    let breakdownHtml = '';
-    for (const [r, count] of Object.entries(restTally)) {
-        breakdownHtml += `<span style="background: #ffffff; color: #78350f; font-weight: 700; font-size: 12px; padding: 4px 10px; border-radius: 20px; border: 1px solid #fcd34d;">${escapeHtml(r)}: ${count}</span>`;
-    }
-    breakdownEl.innerHTML = breakdownHtml;
-
-    // Render Participant Cards
-    const container = document.getElementById('participants-list');
-    if (votes.length === 0) {
-        container.innerHTML = '<div style="color: #94a3b8; font-size: 13px; font-style: italic; text-align: center; padding: 12px;">Поки немає голосів. Будьте першим!</div>';
-        return;
-    }
-
-    let html = '';
-    votes.forEach(v => {
-        const isDisq = isDisqualifiedRole(v.role);
-        const isGoing = v.choice === 'going';
-        const badgeBg = isDisq ? '#fef2f2' : (isGoing ? '#ecfdf5' : '#fff1f2');
-        const badgeBorder = isDisq ? '#fca5a5' : (isGoing ? '#a7f3d0' : '#fecdd3');
-        const badgeText = isDisq ? '#b91c1c' : (isGoing ? '#047857' : '#be123c');
-        const icon = isDisq ? '🚫 Без права голосу' : (isGoing ? '🚗 Їдемо' : '🏠 Не їдемо');
-        const restStr = (isGoing && v.restaurant && !isDisq) ? `<span style="background: rgba(255,255,255,0.8); border: 1px solid #cbd5e1; border-radius: 6px; padding: 2px 6px; font-size: 11px; color: #334155; margin-left: 4px;">📍 ${escapeHtml(v.restaurant)}</span>` : '';
-        const carStr = (isGoing && v.car && v.car !== 'Без авто' && !isDisq) ? `<span style="background: #eff6ff; border: 1px solid #93c5fd; border-radius: 6px; padding: 2px 6px; font-size: 11px; color: #1e40af; font-weight: 700; margin-left: 4px;">${getCarBadge(v.car)}</span>` : '';
-        const roleStr = v.role ? `<span style="background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 6px; padding: 2px 6px; font-size: 11px; color: #475569; font-weight: 600; margin-left: 4px;">🕵️ ${escapeHtml(v.role)}</span>` : '';
-        const noteStr = v.note ? `<span style="color: #64748b; font-size: 12px; margin-left: 4px;">(${escapeHtml(v.note)})</span>` : '';
-
-        html += `
-        <div style="display: flex; justify-content: space-between; align-items: center; background: ${badgeBg}; border: 1px solid ${badgeBorder}; border-radius: 8px; padding: 8px 12px;">
-            <div style="font-size: 14px; font-weight: 600; color: #0f172a; display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
-                <span style="font-size: 12px; font-weight: 700; color: ${badgeText}; background: #ffffff; padding: 2px 8px; border-radius: 6px; border: 1px solid ${badgeBorder};">${icon}</span>
-                <strong>${escapeHtml(v.name)}</strong>
-                ${roleStr}
-                ${carStr}
-                ${restStr}
-                ${noteStr}
-            </div>
-        </div>
-        `;
-    });
-
-    container.innerHTML = html;
-}
-
-function pluralVotes(count) {
-    if (count === 1) return 'голос';
-    if (count >= 2 && count <= 4) return 'голоси';
-    return 'голосів';
-}
-
-function escapeHtml(str) {
-    if (!str) return '';
-    return str.replace(/[&<>"']/g, function(m) {
-        return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[m];
-    });
-}
-
-function showToast(message, isError = false) {
-    let toast = document.getElementById('vote-toast');
-    if (!toast) {
-        toast = document.createElement('div');
-        toast.id = 'vote-toast';
-        toast.style.cssText = 'position: fixed; bottom: 20px; right: 20px; padding: 12px 20px; border-radius: 10px; font-weight: 700; font-size: 14px; color: #ffffff; z-index: 99999; box-shadow: 0 10px 25px rgba(0,0,0,0.2); transition: all 0.3s ease; opacity: 0; transform: translateY(10px);';
-        document.body.appendChild(toast);
-    }
-    toast.style.background = isError ? '#ef4444' : '#059669';
-    toast.innerText = message;
-    toast.style.opacity = '1';
-    toast.style.transform = 'translateY(0)';
-    setTimeout(() => {
-        toast.style.opacity = '0';
-        toast.style.transform = 'translateY(10px)';
-    }, 2500);
-}
-
-async function handleVoteSubmit(event) {
-    if (event) {
-        event.preventDefault();
-    }
-    
-    const { isOpen, timeStr } = getKyivTimeInfo();
-    if (!isOpen) {
-        showToast(`🔴 Голосування закрите! Приймається лише з 11:30 до 12:00 за Києвом (Зараз ${timeStr}).`, true);
-        alert(`⛔ Голосування закрите!
-
-Зараз ${timeStr} за київським часом.
-Офіційне голосування відкрите виключно з 11:30 до 12:00.`);
-        return false;
-    }
-
-    const name = authUsername; // Inferred from session
-
-    if (!name) {
-        alert("Помилка авторизації. Перезавантажте сторінку.");
-        return false;
-    }
-
-    const choiceEl = document.querySelector('input[name="vote-choice"]:checked');
-    const choice = choiceEl ? choiceEl.value : 'going';
-    
-    const restEl = document.getElementById('voter-restaurant-select');
-    const restaurant = restEl ? restEl.value : '';
-    
-    const carEl = document.getElementById('voter-car-select');
-    const car = carEl ? carEl.value : '';
-
-    const roleEl = document.getElementById('voter-role-select');
-    const role = roleEl ? roleEl.value : '';
-
-    if (isDisqualifiedRole(role)) {
-        alert(`⛔ УВАГА! ОБМЕЖЕННЯ ЗА ПОНЯТТЯМИ!
-
-Масть "${role}" не має права голосу!
-
-Ваше ім'я з позначкою 🚫 (Без права голосу) буде додано в список, але голос НЕ враховуватиметься при виборі закладу та водія.`);
-    }
-
-    const noteEl = document.getElementById('voter-note-input');
-    const note = noteEl ? noteEl.value.trim() : '';
-
-    if (choice === 'going') {
-        try { launchFireworks(); } catch(e) {}
-    }
 
     const today = getTodayStr();
     const voteData = {
@@ -962,20 +693,6 @@ async function handleVoteSubmit(event) {
     renderVotes(currentVotes);
 
     showToast("✅ Ваш голос збережено!");
-
-    // 2. Background Cloud Sync (Firebase)
-    if (FIREBASE_DB_URL) {
-        try {
-            const url = `${FIREBASE_DB_URL.replace(/\/$/, '')}/votes/${today}/${encodeURIComponent(name)}.json`;
-            fetch(url, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(voteData)
-            }).then(res => {
-                if (res.ok) fetchVotes();
-            }).catch(e => {});
-        } catch (e) {}
-    }
 
     // 3. Background Local Server Sync
     try {
@@ -1006,16 +723,6 @@ async function deleteVote(name) {
     renderVotes(currentVotes);
     showToast("🗑️ Голос видалено");
 
-    // 2. Background Cloud Sync (Firebase)
-    if (FIREBASE_DB_URL) {
-        try {
-            const url = `${FIREBASE_DB_URL.replace(/\/$/, '')}/votes/${today}/${encodeURIComponent(name)}.json`;
-            fetch(url, { method: 'DELETE' }).then(res => {
-                if (res.ok) fetchVotes();
-            }).catch(e => {});
-        } catch (e) {}
-    }
-
     // 3. Background Local Server Sync
     try {
         fetch(`/api/votes`, { 
@@ -1032,15 +739,6 @@ async function deleteVote(name) {
     } catch (e) {}
 }
 
-function configureFirebaseUrl() {
-    const current = FIREBASE_DB_URL || '';
-    const input = prompt('Введіть URL вашої бази даних Firebase Realtime DB (наприклад: https://diner-votes-default-rtdb.firebaseio.com):', current);
-    if (input !== null) {
-        FIREBASE_DB_URL = input.trim();
-        localStorage.setItem('diner_firebase_url', FIREBASE_DB_URL);
-        alert(FIREBASE_DB_URL ? '✅ URL хмарної бази даних збережено!' : 'ℹ️ Хмарну базу даних вимкнено.');
-        fetchVotes();
-    }
 }
 
 function copyVotesForTelegram() {
