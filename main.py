@@ -63,7 +63,7 @@ def main():
     if success:
         print(f"✨ Finished! Email sent to {info}.")
     else:
-        print(f"📌 Finished! HTML report saved to {preview_path}.")
+        print("📌 Finished! HTML report saved to email_preview.html & public/index.html.")
 
 if __name__ == '__main__':
     main()
