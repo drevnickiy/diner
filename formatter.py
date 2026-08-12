@@ -742,22 +742,55 @@ function escapeHtml(str) {{
     }});
 }}
 
-function showToast(message, isError = false) {{
-    let toast = document.getElementById('vote-toast');
-    if (!toast) {{
-        toast = document.createElement('div');
-        toast.id = 'vote-toast';
-        toast.style.cssText = 'position: fixed; bottom: 20px; right: 20px; padding: 12px 20px; border-radius: 10px; font-weight: 700; font-size: 14px; color: #ffffff; z-index: 99999; box-shadow: 0 10px 25px rgba(0,0,0,0.2); transition: all 0.3s ease; opacity: 0; transform: translateY(10px);';
-        document.body.appendChild(toast);
+function showModal(message, isError = false) {{
+    let overlay = document.getElementById('custom-green-modal-overlay');
+    if (!overlay) {{
+        overlay = document.createElement('div');
+        overlay.id = 'custom-green-modal-overlay';
+        overlay.style.cssText = 'position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(15, 23, 42, 0.65); backdrop-filter: blur(6px); display: flex; align-items: center; justify-content: center; z-index: 999999; opacity: 0; transition: opacity 0.25s ease;';
+        
+        overlay.innerHTML = `
+            <div id="custom-green-modal-card" style="background: linear-gradient(135deg, #059669 0%, #047857 100%); color: #ffffff; padding: 28px 24px; border-radius: 20px; box-shadow: 0 25px 50px -12px rgba(4, 120, 87, 0.4), 0 0 0 1px rgba(255,255,255,0.2); max-width: 440px; width: 90%; text-align: center; transform: scale(0.9); transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275); font-family: inherit;">
+                <div id="custom-modal-icon" style="font-size: 42px; margin-bottom: 12px;">🔔</div>
+                <div id="custom-modal-msg" style="font-size: 16px; font-weight: 600; line-height: 1.5; white-space: pre-wrap; word-break: break-word;"></div>
+                <button onclick="closeCustomModal()" style="margin-top: 22px; background: #ffffff; color: #047857; border: none; padding: 10px 30px; border-radius: 12px; font-size: 15px; font-weight: 700; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.15); transition: transform 0.1s, background-color 0.2s;" onmouseover="this.style.background='#f0fdf4'" onmouseout="this.style.background='#ffffff'">Зрозуміло</button>
+            </div>
+        `;
+        document.body.appendChild(overlay);
+        
+        overlay.addEventListener('click', (e) => {{
+            if (e.target === overlay) closeCustomModal();
+        }});
     }}
-    toast.style.background = isError ? '#ef4444' : '#059669';
-    toast.innerText = message;
-    toast.style.opacity = '1';
-    toast.style.transform = 'translateY(0)';
+    
+    const iconEl = document.getElementById('custom-modal-icon');
+    const msgEl = document.getElementById('custom-modal-msg');
+    
+    if (iconEl) iconEl.innerText = isError ? '⚠️' : '✅';
+    if (msgEl) msgEl.innerText = message;
+    
+    overlay.style.display = 'flex';
     setTimeout(() => {{
-        toast.style.opacity = '0';
-        toast.style.transform = 'translateY(10px)';
-    }}, 2500);
+        overlay.style.opacity = '1';
+        const card = document.getElementById('custom-green-modal-card');
+        if (card) card.style.transform = 'scale(1)';
+    }}, 10);
+}}
+
+function closeCustomModal() {{
+    const overlay = document.getElementById('custom-green-modal-overlay');
+    if (overlay) {{
+        overlay.style.opacity = '0';
+        const card = document.getElementById('custom-green-modal-card');
+        if (card) card.style.transform = 'scale(0.9)';
+        setTimeout(() => {{
+            overlay.style.display = 'none';
+        }}, 250);
+    }}
+}}
+
+function showToast(message, isError = false) {{
+    showModal(message, isError);
 }}
 
 async function handleVoteSubmit(event) {{
@@ -767,15 +800,14 @@ async function handleVoteSubmit(event) {{
     
     const {{ isOpen, timeStr }} = getKyivTimeInfo();
     if (!isOpen) {{
-        showToast(`🔴 Голосування закрите! Приймається лише з 11:30 до 12:00 за Києвом (Зараз ${{timeStr}}).`, true);
-        alert(`⛔ Голосування закрите!\n\nЗараз ${{timeStr}} за київським часом.\nОфіційне голосування відкрите виключно з 11:30 до 12:00.`);
+        showModal(`⛔ Голосування закрите!\n\nЗараз ${{timeStr}} за київським часом.\nОфіційне голосування відкрите виключно з 11:30 до 12:00.`, true);
         return false;
     }}
 
     const name = authUsername; // Inferred from session
 
     if (!name) {{
-        alert("Помилка авторизації. Перезавантажте сторінку.");
+        showModal("Помилка авторизації. Перезавантажте сторінку.", true);
         return false;
     }}
 
@@ -786,7 +818,7 @@ async function handleVoteSubmit(event) {{
     const restaurant = restEl ? restEl.value : '';
     
     if (choice === 'going' && !restaurant) {{
-        alert('Будь ласка, оберіть заклад!');
+        showModal('Будь ласка, оберіть заклад!', true);
         submitBtn.disabled = false;
         submitBtn.innerText = '🗳️ Проголосувати / Оновити';
         return false;
@@ -799,7 +831,7 @@ async function handleVoteSubmit(event) {{
     const role = roleEl ? roleEl.value : '';
 
     if (isDisqualifiedRole(role)) {{
-        alert(`⛔ УВАГА! ОБМЕЖЕННЯ ЗА ПОНЯТТЯМИ!\n\nМасть "${{role}}" не має права голосу!\n\nВаше ім'я з позначкою 🚫 (Без права голосу) буде додано в список, але голос НЕ враховуватиметься при виборі закладу та водія.`);
+        showModal(`⛔ УВАГА! ОБМЕЖЕННЯ ЗА ПОНЯТТЯМИ!\n\nМасть "${{role}}" не має права голосу!\n\nВаше ім'я з позначкою 🚫 (Без права голосу) буде додано в список, але голос НЕ враховуватиметься при виборі закладу та водія.`, true);
     }}
 
     const noteEl = document.getElementById('voter-note-input');
@@ -851,10 +883,10 @@ async function handleVoteSubmit(event) {{
                 currentVotes = data.votes;
                 renderVotes(currentVotes, data.summary);
             }} else if (data && data.error) {{
-                alert("Помилка: " + data.error);
+                showModal("Помилка: " + data.error, true);
                 fetchVotes(); // Revert to server state
             }} else {{
-                alert("❌ Невідома помилка сервера");
+                showModal("❌ Невідома помилка сервера", true);
                 fetchVotes();
             }}
         }}).catch(e => {{
@@ -904,7 +936,7 @@ async function deleteVote(name) {{
 
 function copyVotesForTelegram() {{
     if (!currentVotes || currentVotes.length === 0) {{
-        alert('Немає голосів для копіювання!');
+        showModal('Немає голосів для копіювання!', true);
         return;
     }}
 
@@ -959,7 +991,7 @@ function copyVotesForTelegram() {{
             btn.style.background = '#0284c7';
         }}, 2000);
     }}).catch(err => {{
-        alert('Результат:' + String.fromCharCode(10, 10) + text);
+        showModal('Результат:' + String.fromCharCode(10, 10) + text);
     }});
 }}
 
