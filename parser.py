@@ -37,6 +37,12 @@ RESTAURANTS = [
         'name': 'Eric / Bierstube (Ерік)',
         'url': 'https://carry.ck.ua/erik',
         'icon': '🍺'
+    },
+    {
+        'id': 'escobar',
+        'name': 'Escobar (Ескобар)',
+        'url': 'https://escobar30.ps.me/',
+        'icon': '🌮'
     }
 ]
 
@@ -51,7 +57,7 @@ def detect_day(text: str):
 
 def fetch_restaurant_lunches(url: str):
     """
-    Parses Tilda product catalog cards from carry.ck.ua restaurant page.
+    Parses Tilda product catalog cards from carry.ck.ua or PosterShop cards from escobar30.ps.me.
     Returns a dict mapping day_code (0..4) -> lunch info.
     """
     try:
@@ -62,45 +68,78 @@ def fetch_restaurant_lunches(url: str):
         return {}
 
     soup = BeautifulSoup(response.text, 'html.parser')
-    cards = soup.select('.js-product, .t778__col, .t-catalog__item, .t776__col')
-
     lunches_by_day = {}
 
-    for card in cards:
-        name_el = card.select_one('.js-product-name, .t778__title, .t776__title')
-        if not name_el:
-            continue
-        
-        title = name_el.get_text(strip=True)
-        day_code = detect_day(title)
-        if day_code is None:
-            continue
+    if 'ps.me' in url:
+        # PosterShop platform (Escobar)
+        cards = soup.find_all(attrs={"data-testid": "product_block"})
+        for card in cards:
+            name_el = card.find(attrs={"data-testid": "product_name"})
+            if not name_el:
+                continue
+            title = name_el.get_text(strip=True)
+            day_code = detect_day(title)
+            if day_code is None:
+                continue
 
-        descr_el = card.select_one('.t778__descr, .t776__descr, .js-product-descr')
-        raw_descr = descr_el.get_text(separator='\n', strip=True) if descr_el else ''
+            price_el = card.find(attrs={"data-testid": "product_price"})
+            price = price_el.get_text(strip=True) if price_el else ''
 
-        price_el = card.select_one('.js-product-price, .t778__price-value, .t776__price-value')
-        price = price_el.get_text(strip=True) if price_el else ''
+            descr_el = card.find(class_=re.compile("productDescription|description"))
+            raw_descr = descr_el.get_text(separator='\n', strip=True) if descr_el else ''
+            
+            dishes = [d.strip() for d in raw_descr.split('\n') if d.strip() and d.strip().lower() != 'склад:']
 
-        curr_el = card.select_one('.t778__price-currency, .t776__price-currency')
-        curr = curr_el.get_text(strip=True) if curr_el else 'грн.'
+            img_el = card.find('img')
+            img_url = img_el.get('src') if img_el else None
 
-        img_el = card.select_one('img')
-        img_url = img_el.get('src') or img_el.get('data-original') if img_el else None
+            if day_code not in lunches_by_day or (not lunches_by_day[day_code]['dishes'] and dishes):
+                lunches_by_day[day_code] = {
+                    'title': title,
+                    'day_code': day_code,
+                    'day_name': DAY_MAP[day_code],
+                    'price': price if price else 'Ціна не вказана',
+                    'dishes': dishes,
+                    'raw_description': raw_descr,
+                    'image_url': img_url
+                }
+    else:
+        # Tilda platform (carry.ck.ua)
+        cards = soup.select('.js-product, .t778__col, .t-catalog__item, .t776__col')
+        for card in cards:
+            name_el = card.select_one('.js-product-name, .t778__title, .t776__title')
+            if not name_el:
+                continue
+            
+            title = name_el.get_text(strip=True)
+            day_code = detect_day(title)
+            if day_code is None:
+                continue
 
-        dishes = [d.strip() for d in raw_descr.split('\n') if d.strip()]
+            descr_el = card.select_one('.t778__descr, .t776__descr, .js-product-descr')
+            raw_descr = descr_el.get_text(separator='\n', strip=True) if descr_el else ''
 
-        # Store or enrich existing day lunch entry
-        if day_code not in lunches_by_day or (not lunches_by_day[day_code]['dishes'] and dishes):
-            lunches_by_day[day_code] = {
-                'title': title,
-                'day_code': day_code,
-                'day_name': DAY_MAP[day_code],
-                'price': f'{price} {curr}'.strip() if price else 'Ціна не вказана',
-                'dishes': dishes,
-                'raw_description': raw_descr,
-                'image_url': img_url
-            }
+            price_el = card.select_one('.js-product-price, .t778__price-value, .t776__price-value')
+            price = price_el.get_text(strip=True) if price_el else ''
+
+            curr_el = card.select_one('.t778__price-currency, .t776__price-currency')
+            curr = curr_el.get_text(strip=True) if curr_el else 'грн.'
+
+            img_el = card.select_one('img')
+            img_url = img_el.get('src') or img_el.get('data-original') if img_el else None
+
+            dishes = [d.strip() for d in raw_descr.split('\n') if d.strip() and d.strip().lower() != 'склад:']
+
+            if day_code not in lunches_by_day or (not lunches_by_day[day_code]['dishes'] and dishes):
+                lunches_by_day[day_code] = {
+                    'title': title,
+                    'day_code': day_code,
+                    'day_name': DAY_MAP[day_code],
+                    'price': f'{price} {curr}'.strip() if price else 'Ціна не вказана',
+                    'dishes': dishes,
+                    'raw_description': raw_descr,
+                    'image_url': img_url
+                }
 
     return lunches_by_day
 

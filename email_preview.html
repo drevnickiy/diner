@@ -6,18 +6,42 @@
     <title>Бізнес-ланчі в Черкасах</title>
 </head>
 <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f1f5f9; margin: 0; padding: 24px 12px;">
-    <div style="max-width: 1060px; margin: 0 auto;">
+    <!-- Auth Container -->
+    <div id="auth-container" style="max-width: 400px; margin: 60px auto; background: #ffffff; padding: 32px; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); display: none;">
+        <h2 style="text-align: center; color: #0f172a; margin-top: 0;">Вхід у систему</h2>
+        <form id="auth-form" action="javascript:void(0);" style="display: flex; flex-direction: column; gap: 16px;">
+            <div>
+                <label style="display: block; font-size: 13px; font-weight: 700; color: #334155; margin-bottom: 6px;">Логін</label>
+                <input type="text" id="auth-username" required style="width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; box-sizing: border-box;">
+            </div>
+            <div>
+                <label style="display: block; font-size: 13px; font-weight: 700; color: #334155; margin-bottom: 6px;">Пароль</label>
+                <input type="password" id="auth-password" required style="width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; box-sizing: border-box;">
+            </div>
+            <div id="auth-error" style="color: #ef4444; font-size: 13px; font-weight: 600; text-align: center; display: none;"></div>
+            <button type="submit" id="auth-login-btn" onclick="handleAuth(event, 'login')" style="background: #2563eb; color: #fff; border: none; padding: 12px; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 15px;">Увійти</button>
+            <button type="button" id="auth-register-btn" onclick="handleAuth(event, 'register')" style="background: #ffffff; color: #2563eb; border: 2px solid #2563eb; padding: 12px; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 15px;">Зареєструватися</button>
+        </form>
+    </div>
+
+    <!-- Main App Container -->
+    <div id="main-app" style="max-width: 1240px; margin: 0 auto; display: none;">
         
         <!-- Header -->
         <div style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color: #ffffff; padding: 28px 24px; border-radius: 16px 16px 14px 14px; text-align: center; margin-bottom: 24px; box-shadow: 0 10px 25px -5px rgba(15,23,42,0.3);">
-            <span style="background: rgba(255,255,255,0.15); padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; display: inline-block; margin-bottom: 8px;">
-                📅 12.08.2026 • Середа
-            </span>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <span style="background: rgba(255,255,255,0.15); padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; display: inline-block;">
+                    📅 12.08.2026 • Середа
+                </span>
+                <button onclick="handleLogout()" style="background: rgba(239, 68, 68, 0.8); color: white; border: none; padding: 4px 12px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; transition: background 0.2s;">
+                    Вийти 🚪
+                </button>
+            </div>
             <h1 style="margin: 6px 0 0 0; font-size: 26px; font-weight: 800; letter-spacing: -0.5px;">
                 🍱 Меню бізнес-ланчів на тиждень
             </h1>
             <p style="margin: 8px 0 0 0; font-size: 14px; color: #94a3b8;">
-                Chacha che & Eric Bierstube (Carry.ck.ua)
+                Chacha che, Eric Bierstube & Escobar
             </p>
         </div>
 
@@ -34,13 +58,13 @@
                         🚗 Голосування: Їдемо чи Не їдемо?
                     </h2>
                     <p style="margin: 4px 0 0 0; font-size: 13px; color: #64748b;">
-                        Обирайте заклад, вводьте ім'я та голосуйте! Переможець визначається за кількістю голосів.
+                        Обирайте заклад, вводьте ім'я та голосуйте! ⏰ <strong>Час голосування: 11:30 – 12:00 (Київ)</strong>
                     </p>
+                    <div id="voting-time-status" style="margin-top: 8px; display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 700;">
+                        <!-- Dynamic status inserted by JS -->
+                    </div>
                 </div>
                 <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                    <button id="config-db-btn" onclick="configureFirebaseUrl()" style="background: #475569; color: #ffffff; border: none; padding: 8px 14px; border-radius: 8px; font-weight: 600; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: all 0.2s;">
-                        ☁️ Налаштувати БД
-                    </button>
                     <button id="fireworks-btn" onclick="launchFireworks()" style="background: linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%); color: #ffffff; border: none; padding: 8px 14px; border-radius: 8px; font-weight: 700; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 4px 12px rgba(236,72,153,0.3); transition: transform 0.1s;">
                         🎆 Феєрверк!
                     </button>
@@ -51,7 +75,7 @@
             </div>
 
             <!-- Winning Restaurant Banner -->
-            <div id="winner-banner" style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border: 2px solid #f59e0b; border-radius: 12px; padding: 14px 18px; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+            <div id="winner-banner" style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border: 2px solid #f59e0b; border-radius: 12px; padding: 14px 18px; margin-bottom: 14px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
                 <div style="display: flex; align-items: center; gap: 12px;">
                     <span style="font-size: 28px;">🏆</span>
                     <div>
@@ -68,6 +92,26 @@
                 </div>
             </div>
 
+            <!-- Driver / Car Selection Banner -->
+            <div id="driver-banner" style="background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); border: 2px solid #3b82f6; border-radius: 12px; padding: 14px 18px; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <span style="font-size: 28px;">🚘</span>
+                    <div>
+                        <div style="font-size: 11px; font-weight: 800; color: #1e40af; text-transform: uppercase; letter-spacing: 1px;">
+                            Чия машина їде (вибірка серед тих, хто проголосував "Їдемо"):
+                        </div>
+                        <div id="driver-title" style="font-size: 16px; font-weight: 800; color: #1e3a8a;">
+                            Ще не обрано водія
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <button id="pick-driver-btn" onclick="pickRandomDriver(true)" style="background: #2563eb; color: #ffffff; border: none; padding: 8px 14px; border-radius: 8px; font-weight: 700; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 4px 12px rgba(37,99,235,0.3); transition: transform 0.1s;">
+                        🎲 Обрати чия машина їде
+                    </button>
+                </div>
+            </div>
+
             <!-- Main Voting Content Grid -->
             <div style="display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-start;">
                 
@@ -75,11 +119,24 @@
                 <div style="flex: 1 1 320px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 18px;">
                     <form id="vote-form" action="javascript:void(0);" onsubmit="handleVoteSubmit(event); return false;" style="display: flex; flex-direction: column; gap: 14px;">
                         
+                        <!-- Name input removed, inferred from session -->
+
                         <div>
-                            <label for="voter-name-input" style="display: block; font-size: 13px; font-weight: 700; color: #334155; margin-bottom: 6px;">
-                                👤 Ваше ім'я <span style="color: #ef4444;">*</span>
+                            <label for="voter-role-select" style="display: block; font-size: 13px; font-weight: 700; color: #9f1239; margin-bottom: 6px;">
+                                🕵️ Ваша масть / роль у кримінальному світі <span style="color: #ef4444;">*</span>
                             </label>
-                            <input type="text" id="voter-name-input" required placeholder="Наприклад: Богдан" style="width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; outline: none; box-sizing: border-box; transition: border-color 0.2s;">
+                            <select id="voter-role-select" required style="width: 100%; padding: 10px 12px; border: 2px solid #f43f5e; border-radius: 8px; font-size: 14px; outline: none; background: #fff1f2; color: #0f172a; cursor: pointer; font-weight: 700;">
+                                <option value="Вор в законі">👑 Вор в законі</option>
+                                <option value="Бродяга">🗡️ Бродяга (Смотрящий)</option>
+                                <option value="Блатной">🕶️ Блатной / Авторитет</option>
+                                <option value="Пацан">🧢 Правильний пацан</option>
+                                <option value="Мужик">🛠️ Мужик (Роботяга)</option>
+                                <option value="Фраєр">🎩 Фраєр (Без права голосу)</option>
+                                <option value="Барига">💰 Барига (Без права голосу)</option>
+                                <option value="Чорт">🃏 Чорт / Шістка (Без права голосу)</option>
+                                <option value="Шерсть">🐺 Шерсть (Без права голосу)</option>
+                                <option value="Опущений">🧹 Опущений (Без права голосу)</option>
+                            </select>
                         </div>
 
                         <div>
@@ -105,7 +162,21 @@
                             <select id="voter-restaurant-select" style="width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; outline: none; background: #ffffff; color: #0f172a; cursor: pointer;">
                                 <option value="Chacha che (Чача)">🍷 Chacha che (Чача)</option>
                                 <option value="Eric / Bierstube (Ерік)">🍺 Eric / Bierstube (Ерік)</option>
+                                <option value="Escobar (Ескобар)">🌮 Escobar (Ескобар)</option>
                                 <option value="Будь-яке / Без різниці">🤷 Будь-яке / Без різниці</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label for="voter-car-select" style="display: block; font-size: 13px; font-weight: 700; color: #334155; margin-bottom: 6px;">
+                                🚘 Ваше авто (BMW, Audi, Mazda, VW):
+                            </label>
+                            <select id="voter-car-select" style="width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; outline: none; background: #ffffff; color: #0f172a; cursor: pointer;">
+                                <option value="BMW">🏎️ BMW</option>
+                                <option value="Audi">🚔 Audi</option>
+                                <option value="Mazda">🚗 Mazda</option>
+                                <option value="VW">🚘 VW</option>
+                                <option value="Без авто">🚶 Без авто / Пішки</option>
                             </select>
                         </div>
 
@@ -159,10 +230,10 @@
             </div>
         </div>
 
-        <!-- Restaurant Content 2-Column Grid -->
+        <!-- Restaurant Content Grid -->
         <div style="display: flex; flex-wrap: wrap; gap: 20px; align-items: flex-start;">
             
-        <div style="flex: 1 1 460px; min-width: 320px; background: #ffffff; border-radius: 14px; border: 1px solid #e2e8f0; margin-bottom: 24px; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); box-sizing: border-box;">
+        <div style="flex: 1 1 340px; min-width: 300px; background: #ffffff; border-radius: 14px; border: 1px solid #e2e8f0; margin-bottom: 24px; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); box-sizing: border-box;">
             <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #f1f5f9; padding-bottom: 12px; margin-bottom: 16px;">
                 <h2 style="margin: 0; font-size: 20px; color: #0f172a;">🍷 Chacha che (Чача)</h2>
                 <a href="https://carry.ck.ua/chacha" target="_blank" style="background-color: #2563eb; color: #ffffff; text-decoration: none; padding: 8px 14px; border-radius: 8px; font-weight: 600; font-size: 13px;">Замовити</a>
@@ -225,7 +296,7 @@
                 
         </div>
         
-        <div style="flex: 1 1 460px; min-width: 320px; background: #ffffff; border-radius: 14px; border: 1px solid #e2e8f0; margin-bottom: 24px; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); box-sizing: border-box;">
+        <div style="flex: 1 1 340px; min-width: 300px; background: #ffffff; border-radius: 14px; border: 1px solid #e2e8f0; margin-bottom: 24px; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); box-sizing: border-box;">
             <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #f1f5f9; padding-bottom: 12px; margin-bottom: 16px;">
                 <h2 style="margin: 0; font-size: 20px; color: #0f172a;">🍺 Eric / Bierstube (Ерік)</h2>
                 <a href="https://carry.ck.ua/erik" target="_blank" style="background-color: #2563eb; color: #ffffff; text-decoration: none; padding: 8px 14px; border-radius: 8px; font-weight: 600; font-size: 13px;">Замовити</a>
@@ -288,31 +359,340 @@
                 
         </div>
         
+        <div style="flex: 1 1 340px; min-width: 300px; background: #ffffff; border-radius: 14px; border: 1px solid #e2e8f0; margin-bottom: 24px; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); box-sizing: border-box;">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #f1f5f9; padding-bottom: 12px; margin-bottom: 16px;">
+                <h2 style="margin: 0; font-size: 20px; color: #0f172a;">🌮 Escobar (Ескобар)</h2>
+                <a href="https://escobar30.ps.me/" target="_blank" style="background-color: #2563eb; color: #ffffff; text-decoration: none; padding: 8px 14px; border-radius: 8px; font-weight: 600; font-size: 13px;">Замовити</a>
+            </div>
+            
+                <div style="background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 16px; margin-bottom: 14px;">
+                    <div style="margin-bottom: 10px;">
+                        <span style="background: #0f172a; color: #ffffff; font-size: 13px; font-weight: 700; padding: 4px 10px; border-radius: 6px; float: right;">150 грн</span>
+                        <strong style="font-size: 16px; color: #0f172a;">Понеділок</strong>
+                        
+                    </div>
+                    <ul style="margin: 0; padding-left: 4px; list-style: none; font-size: 14px;">
+                        <li style="margin-bottom: 6px; color: #334155; line-height: 1.4;">• Солянка</li><li style="margin-bottom: 6px; color: #334155; line-height: 1.4;">• Картопля тушкована зі свининою</li><li style="margin-bottom: 6px; color: #334155; line-height: 1.4;">• Салат з буряка</li><li style="margin-bottom: 6px; color: #334155; line-height: 1.4;">• Узвар з сухофруктами</li>
+                    </ul>
+                </div>
+                
+                <div style="background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 16px; margin-bottom: 14px;">
+                    <div style="margin-bottom: 10px;">
+                        <span style="background: #0f172a; color: #ffffff; font-size: 13px; font-weight: 700; padding: 4px 10px; border-radius: 6px; float: right;">150 грн</span>
+                        <strong style="font-size: 16px; color: #0f172a;">Вівторок</strong>
+                        
+                    </div>
+                    <ul style="margin: 0; padding-left: 4px; list-style: none; font-size: 14px;">
+                        <li style="margin-bottom: 6px; color: #334155; line-height: 1.4;">• Уха</li><li style="margin-bottom: 6px; color: #334155; line-height: 1.4;">• Макарони з курячою відбивною</li><li style="margin-bottom: 6px; color: #334155; line-height: 1.4;">• Салат вітамінний</li><li style="margin-bottom: 6px; color: #334155; line-height: 1.4;">• Компот вишневий</li>
+                    </ul>
+                </div>
+                
+                <div style="background-color: #fff1f2; border: 2px solid #e11d48; border-radius: 10px; padding: 16px; margin-bottom: 14px;">
+                    <div style="margin-bottom: 10px;">
+                        <span style="background: #0f172a; color: #ffffff; font-size: 13px; font-weight: 700; padding: 4px 10px; border-radius: 6px; float: right;">150 грн</span>
+                        <strong style="font-size: 16px; color: #0f172a;">Середа</strong>
+                        <span style="background: #e11d48; color: #ffffff; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 12px; margin-left: 8px; text-transform: uppercase;">Сьогодні</span>
+                    </div>
+                    <ul style="margin: 0; padding-left: 4px; list-style: none; font-size: 14px;">
+                        <li style="margin-bottom: 6px; color: #334155; line-height: 1.4;">• Борщ зі свининою</li><li style="margin-bottom: 6px; color: #334155; line-height: 1.4;">• Картопляне пюре</li><li style="margin-bottom: 6px; color: #334155; line-height: 1.4;">• Котлета з телятини</li><li style="margin-bottom: 6px; color: #334155; line-height: 1.4;">• Салат з капусти та огірка</li><li style="margin-bottom: 6px; color: #334155; line-height: 1.4;">• Узвар з сухофруктами</li>
+                    </ul>
+                </div>
+                
+                <div style="background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 16px; margin-bottom: 14px;">
+                    <div style="margin-bottom: 10px;">
+                        <span style="background: #0f172a; color: #ffffff; font-size: 13px; font-weight: 700; padding: 4px 10px; border-radius: 6px; float: right;">150 грн</span>
+                        <strong style="font-size: 16px; color: #0f172a;">Четвер</strong>
+                        
+                    </div>
+                    <ul style="margin: 0; padding-left: 4px; list-style: none; font-size: 14px;">
+                        <li style="margin-bottom: 6px; color: #334155; line-height: 1.4;">• Суп сирний з куркою</li><li style="margin-bottom: 6px; color: #334155; line-height: 1.4;">• Гречана каша зі свининою</li><li style="margin-bottom: 6px; color: #334155; line-height: 1.4;">• Салат з капусти та огірка</li><li style="margin-bottom: 6px; color: #334155; line-height: 1.4;">• Узвар з сухофруктами</li>
+                    </ul>
+                </div>
+                
+                <div style="background-color: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 10px; padding: 12px 16px; margin-bottom: 14px; color: #94a3b8;">
+                    <strong>П'ятниця</strong>  — <em>Меню не вказано</em>
+                </div>
+                
+        </div>
+        
         </div>
 
         <!-- Footer -->
         <div style="text-align: center; color: #64748b; font-size: 12px; margin-top: 24px; padding: 12px;">
             Сформовано автоматично • <a href="https://carry.ck.ua" style="color: #2563eb; text-decoration: none;">Carry.ck.ua</a>
         </div>
+        <!-- Main App Closing Div -->
     </div>
 
-<script>
+    <!-- Initialization and Voting Logic -->
+    <script>
+// Authentication Logic
+let authToken = localStorage.getItem('diner_auth_token');
+let authUsername = localStorage.getItem('diner_auth_username');
+
+function checkAuthStatus() {
+    const authContainer = document.getElementById('auth-container');
+    const mainApp = document.getElementById('main-app');
+    
+    if (authToken) {
+        authContainer.style.display = 'none';
+        mainApp.style.display = 'block';
+        fetchVotes();
+    } else {
+        authContainer.style.display = 'block';
+        mainApp.style.display = 'none';
+    }
+}
+
+async function handleAuth(event, type) {
+    event.preventDefault();
+    const usernameEl = document.getElementById('auth-username');
+    const passwordEl = document.getElementById('auth-password');
+    const errorEl = document.getElementById('auth-error');
+    
+    if (!usernameEl.value || !passwordEl.value) {
+        errorEl.innerText = 'Будь ласка, введіть логін та пароль.';
+        errorEl.style.display = 'block';
+        return;
+    }
+
+    errorEl.style.display = 'none';
+    const endpoint = type === 'login' ? '/api/login' : '/api/register';
+    
+    try {
+        const res = await fetch(endpoint, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username: usernameEl.value.trim(), password: passwordEl.value })
+        });
+        const data = await res.json();
+        
+        if (data.success) {
+            authToken = data.token;
+            authUsername = data.username;
+            localStorage.setItem('diner_auth_token', authToken);
+            localStorage.setItem('diner_auth_username', authUsername);
+            usernameEl.value = '';
+            passwordEl.value = '';
+            checkAuthStatus();
+            showToast(type === 'login' ? 'Успішний вхід!' : 'Успішна реєстрація!');
+        } else {
+            errorEl.innerText = data.error || 'Помилка авторизації.';
+            errorEl.style.display = 'block';
+        }
+    } catch (e) {
+        errorEl.innerText = 'Помилка з'єднання із сервером.';
+        errorEl.style.display = 'block';
+    }
+}
+
+async function handleLogout() {
+    if (authToken) {
+        try {
+            await fetch('/api/logout', {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${authToken}` }
+            });
+        } catch (e) {}
+    }
+    authToken = null;
+    authUsername = null;
+    localStorage.removeItem('diner_auth_token');
+    localStorage.removeItem('diner_auth_username');
+    checkAuthStatus();
+}
+
 let currentVotes = [];
 let lastWinner = null;
+let selectedDriver = null;
 
 // Firebase Realtime Database URL for global sync on GitHub Pages
 let FIREBASE_DB_URL = localStorage.getItem('diner_firebase_url') || 'https://diner-votes-default-rtdb.firebaseio.com';
 
 document.addEventListener('DOMContentLoaded', () => {
+    // Auto-clean old days' votes from localStorage
+    try {
+        const todayKey = 'diner_votes_' + getTodayStr();
+        const todayDriverKey = 'diner_driver_' + getTodayStr();
+        for (let i = localStorage.length - 1; i >= 0; i--) {
+            const k = localStorage.key(i);
+            if (k && ((k.startsWith('diner_votes_') && k !== todayKey) || (k.startsWith('diner_driver_') && k !== todayDriverKey))) {
+                localStorage.removeItem(k);
+            }
+        }
+    } catch(e) {}
+
     const savedName = localStorage.getItem('diner_user_name');
     if (savedName) {
         const input = document.getElementById('voter-name-input');
         if (input) input.value = savedName;
     }
-    fetchVotes();
-    setInterval(fetchVotes, 3000);
+    updateTimeStatus();
+    checkAuthStatus();
+    setInterval(updateTimeStatus, 60000); // Check time every minute
+    
+    fetchDriverFromCloud();
+    // fetchVotes is now called inside checkAuthStatus if logged in
+    setInterval(() => {
+        if (authToken) fetchVotes();
+    }, 3000);
     initFireworksCanvas();
 });
+
+function getKyivTimeInfo() {
+    const now = new Date();
+    const formatter = new Intl.DateTimeFormat('uk-UA', {
+        timeZone: 'Europe/Kiev',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false
+    });
+    const parts = formatter.formatToParts(now);
+    let hour = 0, minute = 0, second = 0;
+    parts.forEach(p => {
+        if (p.type === 'hour') hour = parseInt(p.value, 10);
+        if (p.type === 'minute') minute = parseInt(p.value, 10);
+        if (p.type === 'second') second = parseInt(p.value, 10);
+    });
+    const totalMinutes = hour * 60 + minute;
+    // Voting window temporarily expanded for testing (always open)
+    const isOpen = true;
+    const timeStr = `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}:${String(second).padStart(2, '0')}`;
+    return { isOpen, timeStr, hour, minute };
+}
+
+function updateTimeStatus() {
+    const statusEl = document.getElementById('voting-time-status');
+    const submitBtn = document.getElementById('submit-vote-btn');
+    const { isOpen, timeStr } = getKyivTimeInfo();
+    
+    if (statusEl) {
+        if (isOpen) {
+            statusEl.style.background = '#dcfce7';
+            statusEl.style.color = '#15803d';
+            statusEl.style.border = '1px solid #86efac';
+            statusEl.innerHTML = `🟢 <strong>Голосування ВІДКРИТЕ</strong> (Зараз ${timeStr} Київ • 11:30 – 12:00)`;
+        } else {
+            statusEl.style.background = '#fef2f2';
+            statusEl.style.color = '#b91c1c';
+            statusEl.style.border = '1px solid #fca5a5';
+            statusEl.innerHTML = `🔴 <strong>Голосування ЗАКРИТЕ</strong> (Зараз ${timeStr} Київ • Приймається з 11:30 до 12:00)`;
+        }
+    }
+
+    if (submitBtn) {
+        if (!isOpen) {
+            submitBtn.disabled = true;
+            submitBtn.style.opacity = '0.55';
+            submitBtn.style.cursor = 'not-allowed';
+            submitBtn.innerText = '🔒 Голосування закрите (11:30 - 12:00)';
+        } else {
+            submitBtn.disabled = false;
+            submitBtn.style.opacity = '1';
+            submitBtn.style.cursor = 'pointer';
+            submitBtn.innerText = '🗳️ Проголосувати / Оновити';
+        }
+    }
+}
+
+function getSelectedDriverKey() {
+    return 'diner_driver_' + getTodayStr();
+}
+
+function getSelectedDriver() {
+    return localStorage.getItem(getSelectedDriverKey()) || selectedDriver;
+}
+
+function setSelectedDriver(driverName) {
+    selectedDriver = driverName;
+    if (driverName) {
+        localStorage.setItem(getSelectedDriverKey(), driverName);
+    } else {
+        localStorage.removeItem(getSelectedDriverKey());
+    }
+    if (FIREBASE_DB_URL) {
+        try {
+            const today = getTodayStr();
+            const url = `${FIREBASE_DB_URL.replace(/\/$/, '')}/driver/${today}.json`;
+            fetch(url, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: driverName, updated_at: new Date().toISOString() })
+            }).catch(e => {});
+        } catch(e) {}
+    }
+}
+
+async function fetchDriverFromCloud() {
+    if (FIREBASE_DB_URL) {
+        try {
+            const today = getTodayStr();
+            const url = `${FIREBASE_DB_URL.replace(/\/$/, '')}/driver/${today}.json`;
+            const res = await fetch(url);
+            if (res.ok) {
+                const data = await res.json();
+                if (data && data.name) {
+                    selectedDriver = data.name;
+                    localStorage.setItem(getSelectedDriverKey(), selectedDriver);
+                }
+            }
+        } catch(e) {}
+    }
+}
+
+const DISQUALIFIED_ROLES = ['Фраєр', 'Барига', 'Чорт', 'Шерсть', 'Опущений'];
+
+function isDisqualifiedRole(role) {
+    if (!role) return false;
+    return DISQUALIFIED_ROLES.some(r => role.toLowerCase().includes(r.toLowerCase()));
+}
+
+function pickRandomDriver(userTriggered = true) {
+    const goingVotes = currentVotes.filter(v => v.choice === 'going' && !isDisqualifiedRole(v.role));
+    if (goingVotes.length === 0) {
+        setSelectedDriver(null);
+        renderDriverBanner(null, 0);
+        if (userTriggered) {
+            showToast("⚠️ Жоден авторитетний учасник ще не проголосував 'Їдемо'!", true);
+        }
+        return;
+    }
+
+    const randomIndex = Math.floor(Math.random() * goingVotes.length);
+    const chosenVoter = goingVotes[randomIndex];
+    setSelectedDriver(chosenVoter.name);
+    renderDriverBanner(chosenVoter.name, goingVotes.length);
+
+    if (userTriggered) {
+        try { launchFireworks(); } catch(e) {}
+        showToast(`🚘 Водієм обрано: ${chosenVoter.name}!`);
+    }
+}
+
+function getCarBadge(car) {
+    if (!car || car === 'Без авто') return '';
+    if (car === 'BMW') return '🏎️ BMW';
+    if (car === 'Audi') return '🚔 Audi';
+    if (car === 'Mazda') return '🚗 Mazda';
+    if (car === 'VW') return '🚘 VW';
+    return '🚘 ' + car;
+}
+
+function renderDriverBanner(driverName, goingCount) {
+    const titleEl = document.getElementById('driver-title');
+    if (!titleEl) return;
+
+    if (driverName) {
+        const driverVote = currentVotes.find(v => v.name.toLowerCase() === (driverName || '').toLowerCase());
+        const carBadge = (driverVote && driverVote.car && driverVote.car !== 'Без авто') ? ` (<strong style="color: #1e40af;">${getCarBadge(driverVote.car)}</strong>)` : '';
+        titleEl.innerHTML = `🚘 На машині їде: <strong style="color: #1d4ed8; text-decoration: underline;">${escapeHtml(driverName)}</strong>${carBadge} <span style="font-size: 13px; font-weight: 600; color: #475569;">(обрано випадковим чином серед ${goingCount} ${pluralVotes(goingCount)})</span>`;
+    } else if (goingCount > 0) {
+        titleEl.innerHTML = `<em>Натисніть кнопку справа, щоб обрати водія з ${goingCount} ${pluralVotes(goingCount)}</em>`;
+    } else {
+        titleEl.innerText = 'Ще немає учасників, які проголосували "Їдемо" 🚗';
+    }
+}
 
 function getTodayStr() {
     return new Date().toISOString().split('T')[0];
@@ -336,16 +716,16 @@ async function fetchVotes() {
         } catch (e) {}
     }
 
-    // 2. Try Local Server API (http://localhost:5050/api/votes)
+    // 2. Local Server Fallback
     try {
-        const res = await fetch('/api/votes');
-        if (res.ok) {
-            const data = await res.json();
-            if (data.success) {
-                currentVotes = data.votes || [];
-                renderVotes(currentVotes, data.summary);
-                return;
-            }
+        const res = await fetch('/api/votes', {
+            headers: { 'Authorization': `Bearer ${authToken}` }
+        });
+        const data = await res.json();
+        if (data.success) {
+            currentVotes = data.votes || [];
+            renderVotes(currentVotes, data.summary);
+            return;
         }
     } catch (e) {}
 
@@ -372,19 +752,36 @@ function saveToLocalStorage(votes) {
 }
 
 function renderVotes(votes, summary) {
-    const goingVotes = votes.filter(v => v.choice === 'going');
+    updateTimeStatus();
+
+    const validVotes = votes.filter(v => !isDisqualifiedRole(v.role));
+    const goingVotes = validVotes.filter(v => v.choice === 'going');
     const notGoingVotes = votes.filter(v => v.choice === 'not_going');
     
     document.getElementById('count-going').innerText = goingVotes.length;
     document.getElementById('count-not-going').innerText = notGoingVotes.length;
-    document.getElementById('count-total').innerText = votes.length;
+    document.getElementById('count-total').innerText = validVotes.length + notGoingVotes.length;
 
-    const total = votes.length || 1;
+    const total = (validVotes.length + notGoingVotes.length) || 1;
     const goingPct = (goingVotes.length / total) * 100;
     const notGoingPct = (notGoingVotes.length / total) * 100;
 
-    document.getElementById('progress-going').style.width = (votes.length ? goingPct : 0) + '%';
-    document.getElementById('progress-not-going').style.width = (votes.length ? notGoingPct : 0) + '%';
+    document.getElementById('progress-going').style.width = (total ? goingPct : 0) + '%';
+    document.getElementById('progress-not-going').style.width = (total ? notGoingPct : 0) + '%';
+
+    // Check & Render Driver Selection
+    let currentDriver = getSelectedDriver();
+    const driverStillGoing = goingVotes.some(v => v.name.toLowerCase() === (currentDriver || '').toLowerCase());
+    if (currentDriver && !driverStillGoing) {
+        if (goingVotes.length > 0) {
+            pickRandomDriver(false);
+        } else {
+            setSelectedDriver(null);
+            renderDriverBanner(null, 0);
+        }
+    } else {
+        renderDriverBanner(currentDriver, goingVotes.length);
+    }
 
     // Calculate Restaurant Winner & Breakdown
     let winnerName = summary ? summary.winner : null;
@@ -417,7 +814,7 @@ function renderVotes(votes, summary) {
             launchFireworks();
         }
     } else {
-        winnerTitleEl.innerText = 'Очікування перших голосів...';
+        winnerTitleEl.innerText = 'Очікування перших авторитетних голосів...';
     }
 
     let breakdownHtml = '';
@@ -435,12 +832,15 @@ function renderVotes(votes, summary) {
 
     let html = '';
     votes.forEach(v => {
+        const isDisq = isDisqualifiedRole(v.role);
         const isGoing = v.choice === 'going';
-        const badgeBg = isGoing ? '#ecfdf5' : '#fff1f2';
-        const badgeBorder = isGoing ? '#a7f3d0' : '#fecdd3';
-        const badgeText = isGoing ? '#047857' : '#be123c';
-        const icon = isGoing ? '🚗 Їдемо' : '🏠 Не їдемо';
-        const restStr = (isGoing && v.restaurant) ? `<span style="background: rgba(255,255,255,0.8); border: 1px solid #cbd5e1; border-radius: 6px; padding: 2px 6px; font-size: 11px; color: #334155; margin-left: 4px;">📍 ${escapeHtml(v.restaurant)}</span>` : '';
+        const badgeBg = isDisq ? '#fef2f2' : (isGoing ? '#ecfdf5' : '#fff1f2');
+        const badgeBorder = isDisq ? '#fca5a5' : (isGoing ? '#a7f3d0' : '#fecdd3');
+        const badgeText = isDisq ? '#b91c1c' : (isGoing ? '#047857' : '#be123c');
+        const icon = isDisq ? '🚫 Без права голосу' : (isGoing ? '🚗 Їдемо' : '🏠 Не їдемо');
+        const restStr = (isGoing && v.restaurant && !isDisq) ? `<span style="background: rgba(255,255,255,0.8); border: 1px solid #cbd5e1; border-radius: 6px; padding: 2px 6px; font-size: 11px; color: #334155; margin-left: 4px;">📍 ${escapeHtml(v.restaurant)}</span>` : '';
+        const carStr = (isGoing && v.car && v.car !== 'Без авто' && !isDisq) ? `<span style="background: #eff6ff; border: 1px solid #93c5fd; border-radius: 6px; padding: 2px 6px; font-size: 11px; color: #1e40af; font-weight: 700; margin-left: 4px;">${getCarBadge(v.car)}</span>` : '';
+        const roleStr = v.role ? `<span style="background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 6px; padding: 2px 6px; font-size: 11px; color: #475569; font-weight: 600; margin-left: 4px;">🕵️ ${escapeHtml(v.role)}</span>` : '';
         const noteStr = v.note ? `<span style="color: #64748b; font-size: 12px; margin-left: 4px;">(${escapeHtml(v.note)})</span>` : '';
 
         html += `
@@ -448,10 +848,11 @@ function renderVotes(votes, summary) {
             <div style="font-size: 14px; font-weight: 600; color: #0f172a; display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
                 <span style="font-size: 12px; font-weight: 700; color: ${badgeText}; background: #ffffff; padding: 2px 8px; border-radius: 6px; border: 1px solid ${badgeBorder};">${icon}</span>
                 <strong>${escapeHtml(v.name)}</strong>
+                ${roleStr}
+                ${carStr}
                 ${restStr}
                 ${noteStr}
             </div>
-            <button onclick="deleteVote('${escapeHtml(v.name)}')" title="Видалити голос" style="background: transparent; border: none; color: #94a3b8; font-size: 14px; cursor: pointer; padding: 2px 6px; border-radius: 4px; transition: color 0.2s;" onmouseover="this.style.color='#ef4444'" onmouseout="this.style.color='#94a3b8'">✕</button>
         </div>
         `;
     });
@@ -495,11 +896,20 @@ async function handleVoteSubmit(event) {
         event.preventDefault();
     }
     
-    const nameInput = document.getElementById('voter-name-input');
-    const name = nameInput ? nameInput.value.trim() : '';
+    const { isOpen, timeStr } = getKyivTimeInfo();
+    if (!isOpen) {
+        showToast(`🔴 Голосування закрите! Приймається лише з 11:30 до 12:00 за Києвом (Зараз ${timeStr}).`, true);
+        alert(`⛔ Голосування закрите!
+
+Зараз ${timeStr} за київським часом.
+Офіційне голосування відкрите виключно з 11:30 до 12:00.`);
+        return false;
+    }
+
+    const name = authUsername; // Inferred from session
 
     if (!name) {
-        alert("Будь ласка, введіть ваше ім'я!");
+        alert("Помилка авторизації. Перезавантажте сторінку.");
         return false;
     }
 
@@ -509,10 +919,22 @@ async function handleVoteSubmit(event) {
     const restEl = document.getElementById('voter-restaurant-select');
     const restaurant = restEl ? restEl.value : '';
     
+    const carEl = document.getElementById('voter-car-select');
+    const car = carEl ? carEl.value : '';
+
+    const roleEl = document.getElementById('voter-role-select');
+    const role = roleEl ? roleEl.value : '';
+
+    if (isDisqualifiedRole(role)) {
+        alert(`⛔ УВАГА! ОБМЕЖЕННЯ ЗА ПОНЯТТЯМИ!
+
+Масть "${role}" не має права голосу!
+
+Ваше ім'я з позначкою 🚫 (Без права голосу) буде додано в список, але голос НЕ враховуватиметься при виборі закладу та водія.`);
+    }
+
     const noteEl = document.getElementById('voter-note-input');
     const note = noteEl ? noteEl.value.trim() : '';
-
-    localStorage.setItem('diner_user_name', name);
 
     if (choice === 'going') {
         try { launchFireworks(); } catch(e) {}
@@ -523,6 +945,8 @@ async function handleVoteSubmit(event) {
         name: name,
         choice: choice,
         restaurant: restaurant,
+        car: car,
+        role: role,
         note: note,
         updated_at: new Date().toISOString()
     };
@@ -557,8 +981,11 @@ async function handleVoteSubmit(event) {
     try {
         fetch('/api/votes', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name, choice, restaurant, note })
+            headers: { 
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${authToken}`
+            },
+            body: JSON.stringify({ choice, restaurant, car, role, note })
         }).then(res => res.json()).then(data => {
             if (data && data.success) {
                 currentVotes = data.votes;
@@ -591,7 +1018,10 @@ async function deleteVote(name) {
 
     // 3. Background Local Server Sync
     try {
-        fetch(`/api/votes?name=${encodeURIComponent(name)}`, { method: 'DELETE' })
+        fetch(`/api/votes`, { 
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${authToken}` }
+        })
             .then(res => res.json())
             .then(data => {
                 if (data && data.success) {
@@ -622,19 +1052,29 @@ function copyVotesForTelegram() {
     const going = currentVotes.filter(v => v.choice === 'going');
     const notGoing = currentVotes.filter(v => v.choice === 'not_going');
     const todayStr = new Date().toLocaleDateString('uk-UA');
+    const currentDriver = getSelectedDriver();
 
     let lines = [];
     lines.push('🍱 *Голосування на обід (' + todayStr + ')*');
+    lines.push('⏰ _Час голосування: 11:30 - 12:00 (Київ)_');
     lines.push('');
     lines.push('🚗 *Їдемо (' + going.length + '):*');
     if (going.length > 0) {
         going.forEach(v => {
             const rStr = v.restaurant ? ' [' + v.restaurant + ']' : '';
+            const carStr = (v.car && v.car !== 'Без авто') ? ' ' + getCarBadge(v.car) : '';
             const note = v.note ? ' _(' + v.note + ')_' : '';
-            lines.push('  • ' + v.name + rStr + note);
+            lines.push('  • ' + v.name + carStr + rStr + note);
         });
     } else {
         lines.push('  _(нікого)_');
+    }
+
+    if (going.length > 0) {
+        lines.push('');
+        const driverVote = currentVotes.find(v => v.name.toLowerCase() === (currentDriver || '').toLowerCase());
+        const driverCarStr = (driverVote && driverVote.car && driverVote.car !== 'Без авто') ? ' (' + getCarBadge(driverVote.car) + ')' : '';
+        lines.push('🚘 *Водій / Чия машина:* ' + (currentDriver ? '*' + currentDriver + '*' + driverCarStr : '_(ще не обрано)_'));
     }
 
     lines.push('');
@@ -737,6 +1177,6 @@ function updateFireworks() {
     }
     requestAnimationFrame(updateFireworks);
 }
-</script>
+    </script>
 </body>
 </html>
