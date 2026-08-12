@@ -18,8 +18,13 @@
                 <label style="display: block; font-size: 13px; font-weight: 700; color: #334155; margin-bottom: 6px;">Пароль</label>
                 <input type="password" id="auth-password" required style="width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; box-sizing: border-box;">
             </div>
+            <div>
+                <label style="display: block; font-size: 13px; font-weight: 700; color: #334155; margin-bottom: 6px;">Автомобіль (опціонально при реєстрації)</label>
+                <input type="text" id="auth-car" placeholder="Наприклад: Skoda Fabia" style="width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; box-sizing: border-box;">
+            </div>
             <div id="auth-error" style="color: #ef4444; font-size: 13px; font-weight: 600; text-align: center; display: none;"></div>
             <button type="submit" id="auth-login-btn" onclick="handleAuth(event, 'login')" style="background: #2563eb; color: #fff; border: none; padding: 12px; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 15px;">Увійти</button>
+            <button type="button" id="auth-register-btn" onclick="handleAuth(event, 'register')" style="background: #ffffff; color: #2563eb; border: 2px solid #2563eb; padding: 12px; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 15px;">Зареєструватися</button>
         </form>
     </div>
 
@@ -428,6 +433,7 @@
 // Authentication Logic
 let authToken = localStorage.getItem('diner_auth_token');
 let authUsername = localStorage.getItem('diner_auth_username');
+let authCar = localStorage.getItem('diner_auth_car');
 
 function checkAuthStatus() {
     const authContainer = document.getElementById('auth-container');
@@ -436,6 +442,9 @@ function checkAuthStatus() {
     if (authToken) {
         authContainer.style.display = 'none';
         mainApp.style.display = 'block';
+        if (authCar && document.getElementById('vote-car')) {
+            document.getElementById('vote-car').value = authCar;
+        }
         fetchVotes();
     } else {
         authContainer.style.display = 'block';
@@ -447,6 +456,7 @@ async function handleAuth(event, type) {
     event.preventDefault();
     const usernameEl = document.getElementById('auth-username');
     const passwordEl = document.getElementById('auth-password');
+    const carEl = document.getElementById('auth-car');
     const errorEl = document.getElementById('auth-error');
     
     if (!usernameEl.value || !passwordEl.value) {
@@ -458,21 +468,29 @@ async function handleAuth(event, type) {
     errorEl.style.display = 'none';
     const endpoint = type === 'login' ? '/api/login' : '/api/register';
     
+    let payload = { username: usernameEl.value.trim(), password: passwordEl.value };
+    if (type === 'register' && carEl) {
+        payload.car = carEl.value.trim();
+    }
+    
     try {
         const res = await fetch(endpoint, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username: usernameEl.value.trim(), password: passwordEl.value })
+            body: JSON.stringify(payload)
         });
         const data = await res.json();
         
         if (data.success) {
             authToken = data.token;
             authUsername = data.username;
+            authCar = data.car || '';
             localStorage.setItem('diner_auth_token', authToken);
             localStorage.setItem('diner_auth_username', authUsername);
+            localStorage.setItem('diner_auth_car', authCar);
             usernameEl.value = '';
             passwordEl.value = '';
+            if (carEl) carEl.value = '';
             checkAuthStatus();
             showToast(type === 'login' ? 'Успішний вхід!' : 'Успішна реєстрація!');
         } else {
@@ -496,8 +514,10 @@ async function handleLogout() {
     }
     authToken = null;
     authUsername = null;
+    authCar = null;
     localStorage.removeItem('diner_auth_token');
     localStorage.removeItem('diner_auth_username');
+    localStorage.removeItem('diner_auth_car');
     checkAuthStatus();
 }
 
