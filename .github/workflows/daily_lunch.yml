@@ -1,6 +1,8 @@
 name: Daily Business Lunch Scraper & Email Notifier
 
 on:
+  push:
+    branches: ["main"]
   schedule:
     # Runs Monday to Friday at 07:00 UTC (10:00 AM UTC+3)
     - cron: '0 7 * * 1-5'
