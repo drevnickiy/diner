@@ -877,6 +877,13 @@ async function handleVoteSubmit(event) {
     const restEl = document.getElementById('voter-restaurant-select');
     const restaurant = restEl ? restEl.value : '';
     
+    if (choice === 'going' && !restaurant) {
+        alert('Будь ласка, оберіть заклад!');
+        submitBtn.disabled = false;
+        submitBtn.innerText = '🗳️ Проголосувати / Оновити';
+        return false;
+    }
+    
     const carEl = document.getElementById('voter-car-select');
     const car = carEl ? carEl.value : '';
 

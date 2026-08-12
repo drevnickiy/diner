@@ -170,6 +170,9 @@ class VotingHandler(SimpleHTTPRequestHandler):
                 name = user
                 choice = data.get('choice')
                 restaurant = data.get('restaurant', '')
+                
+                if choice == 'going' and not restaurant:
+                    raise ValueError("Будь ласка, оберіть заклад!")
                 car = data.get('car', '')
                 role = data.get('role', '')
                 note = data.get('note', '')
