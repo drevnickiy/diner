@@ -1,0 +1,6 @@
+{
+  "version": 2,
+  "buildCommand": "python3 main.py --preview",
+  "outputDirectory": "public",
+  "framework": null
+}
