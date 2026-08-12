@@ -22,15 +22,16 @@ class VotingHandler(SimpleHTTPRequestHandler):
         public_dir = os.path.join(os.path.dirname(__file__), 'public')
         super().__init__(*args, directory=public_dir, **kwargs)
 
-    def _check_rate_limit(self):
+    def _check_rate_limit(self, limit=5):
         client_ip = self.client_address[0]
         now = time.time()
-        if client_ip not in ip_requests:
-            ip_requests[client_ip] = []
-        ip_requests[client_ip] = [t for t in ip_requests[client_ip] if now - t < 60]
-        if len(ip_requests[client_ip]) >= 5:
+        key = f"{client_ip}_{self.command}"
+        if key not in ip_requests:
+            ip_requests[key] = []
+        ip_requests[key] = [t for t in ip_requests[key] if now - t < 60]
+        if len(ip_requests[key]) >= limit:
             return False
-        ip_requests[client_ip].append(now)
+        ip_requests[key].append(now)
         return True
 
     def _set_cors_headers(self):
@@ -87,7 +88,7 @@ class VotingHandler(SimpleHTTPRequestHandler):
 
     def do_GET(self):
         
-        if not self._check_rate_limit():
+        if not self._check_rate_limit(limit=60):
             self._send_json(429, {'success': False, 'error': 'Забагато запитів. Зачекайте 1 хвилину.'})
             return
         parsed = urlparse(self.path)

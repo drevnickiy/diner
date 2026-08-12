@@ -426,7 +426,7 @@ document.addEventListener('DOMContentLoaded', () => {{
     // fetchVotes is now called inside checkAuthStatus if logged in
     setInterval(() => {{
         if (authToken) fetchVotes();
-    }}, 3000);
+    }}, 30000);
     initFireworksCanvas();
 }});
 
