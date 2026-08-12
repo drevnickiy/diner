@@ -95,7 +95,7 @@ class VotingHandler(SimpleHTTPRequestHandler):
         if parsed.path == '/api/me':
             user = self._get_auth_user()
             if user:
-                self._send_json(200, {'success': True, 'username': user})
+                self._send_json(200, {'success': True, 'username': user['username'], 'car': user['car']})
             else:
                 self._send_json(401, {'success': False, 'error': 'Unauthorized'})
         elif parsed.path == '/api/votes':
@@ -120,15 +120,19 @@ class VotingHandler(SimpleHTTPRequestHandler):
             return
         parsed = urlparse(self.path)
         
-        if parsed.path == '/api/login':
+        if parsed.path in ('/api/register', '/api/login'):
             content_length = int(self.headers.get('Content-Length', 0))
             body = self.rfile.read(content_length).decode('utf-8')
             try:
                 data = json.loads(body)
                 username = data.get('username')
                 password = data.get('password')
-                token, user = db.login_user(username, password)
-                self._send_json(200, {'success': True, 'token': token, 'username': user})
+                if parsed.path == '/api/register':
+                    car = data.get('car', '')
+                    token, user, user_car = db.register_user(username, password, car)
+                else:
+                    token, user, user_car = db.login_user(username, password)
+                self._send_json(200, {'success': True, 'token': token, 'username': user, 'car': user_car})
             except Exception as e:
                 self._send_json(400, {'success': False, 'error': str(e)})
                 
@@ -165,13 +169,18 @@ class VotingHandler(SimpleHTTPRequestHandler):
                         time_str = now.strftime('%H:%M:%S')
                         raise ValueError(f"Голосування закрите! Зараз {time_str} за Києвом. Приймається лише з 11:30 до 12:00.")
 
-                name = user
+                name = user['username']
                 choice = data.get('choice')
                 restaurant = data.get('restaurant', '')
                 
                 if choice == 'going' and not restaurant:
                     raise ValueError("Будь ласка, оберіть заклад!")
-                car = data.get('car', '')
+                
+                # If car is not provided in payload, fallback to user's saved car
+                car = data.get('car')
+                if car is None:
+                    car = user['car']
+                
                 role = data.get('role', '')
                 note = data.get('note', '')
                 vote_date = data.get('date')
@@ -205,10 +214,10 @@ class VotingHandler(SimpleHTTPRequestHandler):
                 
             params = parse_qs(parsed.query)
             vote_date = params.get('date', [None])[0]
-            name = user
-            
-            if name:
-                votes = db.delete_vote(name, vote_date)
+            name = user['username']
+
+            try:
+                votes = db.delete_vote(name=name, vote_date=vote_date)
                 going_count = sum(1 for v in votes if v['choice'] == 'going')
                 not_going_count = sum(1 for v in votes if v['choice'] == 'not_going')
                 response_data = {
@@ -222,8 +231,8 @@ class VotingHandler(SimpleHTTPRequestHandler):
                     }
                 }
                 self._send_json(200, response_data)
-            else:
-                self._send_json(400, {'success': False, 'error': 'Ім\'я користувача не вказано'})
+            except Exception as e:
+                self._send_json(400, {'success': False, 'error': str(e)})
         else:
             self.send_response(404)
             self.end_headers()
