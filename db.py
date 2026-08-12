@@ -143,7 +143,6 @@ def get_votes(vote_date=None):
     if not vote_date:
         vote_date = get_today_date_str()
     
-    init_db()
     with get_connection() as conn:
         if IS_POSTGRES:
             cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
@@ -169,7 +168,6 @@ def upsert_vote(name, choice, restaurant='', car='', role='', note='', vote_date
     if not vote_date:
         vote_date = get_today_date_str()
 
-    init_db()
     with get_connection() as conn:
         cursor = conn.cursor()
         
@@ -208,7 +206,6 @@ def delete_vote(name, vote_date=None):
     if not vote_date:
         vote_date = get_today_date_str()
 
-    init_db()
     with get_connection() as conn:
         cursor = conn.cursor()
         execute(cursor, 'DELETE FROM votes WHERE vote_date = ? AND name = ?', (vote_date, name.strip()))
@@ -219,7 +216,6 @@ def clear_votes(vote_date=None):
     if not vote_date:
         vote_date = get_today_date_str()
 
-    init_db()
     with get_connection() as conn:
         cursor = conn.cursor()
         execute(cursor, 'DELETE FROM votes WHERE vote_date = ?', (vote_date,))
@@ -238,7 +234,6 @@ def register_user(username, password, car=''):
     salt = os.urandom(16)
     password_hash = _hash_password(password, salt)
     
-    init_db()
     with get_connection() as conn:
         cursor = conn.cursor()
         try:
@@ -254,7 +249,6 @@ def register_user(username, password, car=''):
 def login_user(username, password):
     username = username.strip()
     
-    init_db()
     with get_connection() as conn:
         if IS_POSTGRES:
             cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
