@@ -28,7 +28,7 @@ class VotingHandler(SimpleHTTPRequestHandler):
         if client_ip not in ip_requests:
             ip_requests[client_ip] = []
         ip_requests[client_ip] = [t for t in ip_requests[client_ip] if now - t < 60]
-        if len(ip_requests[client_ip]) >= 10:
+        if len(ip_requests[client_ip]) >= 5:
             return False
         ip_requests[client_ip].append(now)
         return True
@@ -127,8 +127,7 @@ class VotingHandler(SimpleHTTPRequestHandler):
                 username = data.get('username')
                 password = data.get('password')
                 if parsed.path == '/api/register':
-                    raise ValueError("Реєстрація наразі вимкнена.")
-                    # token, user = db.register_user(username, password)
+                    token, user = db.register_user(username, password)
                 else:
                     token, user = db.login_user(username, password)
                 self._send_json(200, {'success': True, 'token': token, 'username': user})
@@ -176,8 +175,7 @@ class VotingHandler(SimpleHTTPRequestHandler):
                 note = data.get('note', '')
                 vote_date = data.get('date')
 
-                raise ValueError("Запис у базу даних наразі вимкнено адміністратором.")
-                # votes = db.upsert_vote(name=name, choice=choice, restaurant=restaurant, car=car, role=role, note=note, vote_date=vote_date)
+                votes = db.upsert_vote(name=name, choice=choice, restaurant=restaurant, car=car, role=role, note=note, vote_date=vote_date)
 
                 response_data = {
                     'success': True,
@@ -209,8 +207,7 @@ class VotingHandler(SimpleHTTPRequestHandler):
             name = user
             
             if name:
-                raise ValueError("Видалення голосів наразі вимкнено адміністратором.")
-                # votes = db.delete_vote(name, vote_date)
+                votes = db.delete_vote(name, vote_date)
                 going_count = sum(1 for v in votes if v['choice'] == 'going')
                 not_going_count = sum(1 for v in votes if v['choice'] == 'not_going')
                 response_data = {
