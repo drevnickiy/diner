@@ -14,15 +14,31 @@ else:
     import sqlite3
     DB_PATH = os.path.join(os.path.dirname(__file__), 'votes.db')
 
+class DBConnection:
+    def __init__(self):
+        self.conn = None
+        
+    def __enter__(self):
+        if IS_POSTGRES:
+            self.conn = psycopg2.connect(DATABASE_URL)
+            self.conn.autocommit = False
+        else:
+            self.conn = sqlite3.connect(DB_PATH)
+            self.conn.row_factory = sqlite3.Row
+        return self.conn
+        
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if self.conn:
+            try:
+                if exc_type is None:
+                    self.conn.commit()
+                else:
+                    self.conn.rollback()
+            finally:
+                self.conn.close()
+
 def get_connection():
-    if IS_POSTGRES:
-        conn = psycopg2.connect(DATABASE_URL)
-        conn.autocommit = False
-        return conn
-    else:
-        conn = sqlite3.connect(DB_PATH)
-        conn.row_factory = sqlite3.Row
-        return conn
+    return DBConnection()
 
 def execute(cursor, query, params=()):
     if IS_POSTGRES:
