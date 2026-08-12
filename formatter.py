@@ -851,10 +851,10 @@ async function handleVoteSubmit(event) {{
                 currentVotes = data.votes;
                 renderVotes(currentVotes, data.summary);
             }} else if (data && data.error) {{
-                showToast("❌ " + data.error, true);
+                alert("Помилка: " + data.error);
                 fetchVotes(); // Revert to server state
             }} else {{
-                showToast("❌ Невідома помилка сервера", true);
+                alert("❌ Невідома помилка сервера");
                 fetchVotes();
             }}
         }}).catch(e => {{
