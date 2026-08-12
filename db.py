@@ -58,6 +58,26 @@ def init_db():
         if 'role' not in columns:
             cursor.execute("ALTER TABLE votes ADD COLUMN role TEXT DEFAULT ''")
         conn.commit()
+    seed_users()
+
+def seed_users():
+    """Seeds the database with default users if they don't exist."""
+    default_users = [
+        ("Bohdan", "Qwerty123"),
+        ("Богдан", "password123")
+    ]
+    with get_connection() as conn:
+        cursor = conn.cursor()
+        for username, password in default_users:
+            cursor.execute('SELECT 1 FROM users WHERE username = ?', (username,))
+            if not cursor.fetchone():
+                salt = os.urandom(16)
+                password_hash = _hash_password(password, salt)
+                cursor.execute(
+                    'INSERT INTO users (username, password_hash, salt) VALUES (?, ?, ?)',
+                    (username, password_hash, salt.hex())
+                )
+        conn.commit()
 
 def get_today_date_str():
     return datetime.now().strftime('%Y-%m-%d')

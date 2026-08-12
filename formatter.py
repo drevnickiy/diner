@@ -95,7 +95,6 @@ def generate_html_report(restaurants_data, target_day=None):
             </div>
             <div id="auth-error" style="color: #ef4444; font-size: 13px; font-weight: 600; text-align: center; display: none;"></div>
             <button type="submit" id="auth-login-btn" onclick="handleAuth(event, 'login')" style="background: #2563eb; color: #fff; border: none; padding: 12px; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 15px;">Увійти</button>
-            <button type="button" id="auth-register-btn" onclick="handleAuth(event, 'register')" style="background: #ffffff; color: #2563eb; border: 2px solid #2563eb; padding: 12px; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 15px;">Зареєструватися</button>
         </form>
     </div>
 

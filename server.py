@@ -120,17 +120,14 @@ class VotingHandler(SimpleHTTPRequestHandler):
             return
         parsed = urlparse(self.path)
         
-        if parsed.path in ('/api/register', '/api/login'):
+        if parsed.path == '/api/login':
             content_length = int(self.headers.get('Content-Length', 0))
             body = self.rfile.read(content_length).decode('utf-8')
             try:
                 data = json.loads(body)
                 username = data.get('username')
                 password = data.get('password')
-                if parsed.path == '/api/register':
-                    token, user = db.register_user(username, password)
-                else:
-                    token, user = db.login_user(username, password)
+                token, user = db.login_user(username, password)
                 self._send_json(200, {'success': True, 'token': token, 'username': user})
             except Exception as e:
                 self._send_json(400, {'success': False, 'error': str(e)})
