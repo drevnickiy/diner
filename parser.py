@@ -48,10 +48,11 @@ RESTAURANTS = [
 
 def detect_day(text: str):
     """Returns day index 0..4 (Mon..Fri) if day is found in text, else None."""
-    text_lower = text.lower()
+    text_lower = text.lower().replace('ʼ', "'").replace('’', "'").replace('`', "'")
     for day_code, patterns in DAY_PATTERNS.items():
         for p in patterns:
-            if p in text_lower:
+            p_normalized = p.replace('ʼ', "'").replace('’', "'").replace('`', "'")
+            if p_normalized in text_lower:
                 return day_code
     return None
 
