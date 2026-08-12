@@ -597,7 +597,7 @@ function copyVotesForTelegram() {{
         lines.push('  _(нікого)_');
     }}
 
-    const text = lines.join('\n');
+    const text = lines.join(String.fromCharCode(10));
 
     navigator.clipboard.writeText(text).then(() => {{
         const btn = document.getElementById('copy-tg-btn');
@@ -609,7 +609,7 @@ function copyVotesForTelegram() {{
             btn.style.background = '#0284c7';
         }}, 2000);
     }}).catch(err => {{
-        alert('Результат:\n\n' + text);
+        alert('Результат:' + String.fromCharCode(10, 10) + text);
     }});
 }}
 
