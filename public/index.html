@@ -629,11 +629,8 @@ function setSelectedDriver(driverName) {
 }
 
 
-const DISQUALIFIED_ROLES = ['Фраєр', 'Барига', 'Чорт', 'Шерсть', 'Опущений'];
-
 function isDisqualifiedRole(role) {
-    if (!role) return false;
-    return DISQUALIFIED_ROLES.some(r => role.toLowerCase().includes(r.toLowerCase()));
+    return false;
 }
 
 function pickRandomDriver(userTriggered = true) {
@@ -808,14 +805,13 @@ function renderVotes(votes, summary) {
 
     let html = '';
     votes.forEach(v => {
-        const isDisq = isDisqualifiedRole(v.role);
         const isGoing = v.choice === 'going';
-        const badgeBg = isDisq ? '#fef2f2' : (isGoing ? '#ecfdf5' : '#fff1f2');
-        const badgeBorder = isDisq ? '#fca5a5' : (isGoing ? '#a7f3d0' : '#fecdd3');
-        const badgeText = isDisq ? '#b91c1c' : (isGoing ? '#047857' : '#be123c');
-        const icon = isDisq ? '🚫 Без права голосу' : (isGoing ? '🚗 Їдемо' : '🏠 Не їдемо');
-        const restStr = (isGoing && v.restaurant && !isDisq) ? `<span style="background: rgba(255,255,255,0.8); border: 1px solid #cbd5e1; border-radius: 6px; padding: 2px 6px; font-size: 11px; color: #334155; margin-left: 4px;">📍 ${escapeHtml(v.restaurant)}</span>` : '';
-        const carStr = (isGoing && v.car && v.car !== 'Без авто' && !isDisq) ? `<span style="background: #eff6ff; border: 1px solid #93c5fd; border-radius: 6px; padding: 2px 6px; font-size: 11px; color: #1e40af; font-weight: 700; margin-left: 4px;">${getCarBadge(v.car)}</span>` : '';
+        const badgeBg = isGoing ? '#ecfdf5' : '#fff1f2';
+        const badgeBorder = isGoing ? '#a7f3d0' : '#fecdd3';
+        const badgeText = isGoing ? '#047857' : '#be123c';
+        const icon = isGoing ? '🚗 Їдемо' : '🏠 Не їдемо';
+        const restStr = (isGoing && v.restaurant) ? `<span style="background: rgba(255,255,255,0.8); border: 1px solid #cbd5e1; border-radius: 6px; padding: 2px 6px; font-size: 11px; color: #334155; margin-left: 4px;">📍 ${escapeHtml(v.restaurant)}</span>` : '';
+        const carStr = (isGoing && v.car && v.car !== 'Без авто') ? `<span style="background: #eff6ff; border: 1px solid #93c5fd; border-radius: 6px; padding: 2px 6px; font-size: 11px; color: #1e40af; font-weight: 700; margin-left: 4px;">${getCarBadge(v.car)}</span>` : '';
         const roleStr = v.role ? `<span style="background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 6px; padding: 2px 6px; font-size: 11px; color: #475569; font-weight: 600; margin-left: 4px;">🕵️ ${escapeHtml(v.role)}</span>` : '';
         const noteStr = v.note ? `<span style="color: #64748b; font-size: 12px; margin-left: 4px;">(${escapeHtml(v.note)})</span>` : '';
 
@@ -940,13 +936,7 @@ async function handleVoteSubmit(event) {
     const roleEl = document.getElementById('voter-role-select');
     const role = roleEl ? roleEl.value : '';
 
-    if (isDisqualifiedRole(role)) {
-        showModal(`⛔ УВАГА! ОБМЕЖЕННЯ ЗА ПОНЯТТЯМИ!
 
-Масть "${role}" не має права голосу!
-
-Ваше ім'я з позначкою 🚫 (Без права голосу) буде додано в список, але голос НЕ враховуватиметься при виборі закладу та водія.`, true);
-    }
 
     const noteEl = document.getElementById('voter-note-input');
     const note = noteEl ? noteEl.value.trim() : '';
@@ -976,7 +966,7 @@ async function handleVoteSubmit(event) {
     saveToLocalStorage(currentVotes);
     renderVotes(currentVotes);
 
-    showToast("✅ Ваш голос збережено!");
+    showModal("ти Дырявый питух только Богдан решает куда едем");
 
     // 2. Background Cloud Sync (Firebase)
 
