@@ -242,7 +242,9 @@ from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
 def run_server(port=5050):
     db.init_db()
     server_address = ('', port)
-    httpd = ThreadingHTTPServer(server_address, VotingHandler)
+    class ThreadedServer(ThreadingHTTPServer):
+        allow_reuse_address = True
+    httpd = ThreadedServer(server_address, VotingHandler)
     print(f"🚀 Voting server running at http://localhost:{port}")
     httpd.serve_forever()
 
