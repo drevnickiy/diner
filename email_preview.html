@@ -301,8 +301,7 @@ let currentVotes = [];
 let lastWinner = null;
 
 // Firebase Realtime Database URL for global sync on GitHub Pages
-// Set your Firebase Realtime DB URL here or via settings
-let FIREBASE_DB_URL = localStorage.getItem('diner_firebase_url') || '';
+let FIREBASE_DB_URL = localStorage.getItem('diner_firebase_url') || 'https://diner-votes-default-rtdb.firebaseio.com';
 
 document.addEventListener('DOMContentLoaded', () => {
     const savedName = localStorage.getItem('diner_user_name');
