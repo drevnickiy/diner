@@ -850,9 +850,23 @@ async function handleVoteSubmit(event) {{
             if (data && data.success) {{
                 currentVotes = data.votes;
                 renderVotes(currentVotes, data.summary);
+            }} else if (data && data.error) {{
+                showToast("❌ " + data.error, true);
+                fetchVotes(); // Revert to server state
+            }} else {{
+                showToast("❌ Невідома помилка сервера", true);
+                fetchVotes();
             }}
-        }}).catch(e => {{}});
-    }} catch (e) {{}}
+        }}).catch(e => {{
+            if (e.message !== 'Unauthorized') {{
+                showToast("❌ Помилка з'єднання", true);
+                fetchVotes();
+            }}
+        }});
+    }} catch (e) {{
+        showToast("❌ Непередбачена помилка", true);
+        fetchVotes();
+    }}
 
     return false;
 }}
