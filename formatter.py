@@ -897,12 +897,12 @@ async function handleVoteSubmit(event) {{
             }}
         }}).catch(e => {{
             if (e.message !== 'Unauthorized') {{
-                showToast("❌ Помилка з'єднання", true);
+                console.warn("Network error during vote submit:", e);
                 fetchVotes();
             }}
         }});
     }} catch (e) {{
-        showToast("❌ Непередбачена помилка", true);
+        console.warn("Unexpected error during vote submit:", e);
         fetchVotes();
     }}
 
