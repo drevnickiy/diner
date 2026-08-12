@@ -533,7 +533,6 @@ function configureFirebaseUrl() {{
         fetchVotes();
     }}
 }}
-</script>
 
 function copyVotesForTelegram() {{
     if (!currentVotes || currentVotes.length === 0) {{
