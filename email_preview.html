@@ -73,7 +73,7 @@
                 
                 <!-- Form Section -->
                 <div style="flex: 1 1 320px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 18px;">
-                    <form id="vote-form" onsubmit="handleVoteSubmit(event)" style="display: flex; flex-direction: column; gap: 14px;">
+                    <form id="vote-form" action="javascript:void(0);" onsubmit="handleVoteSubmit(event); return false;" style="display: flex; flex-direction: column; gap: 14px;">
                         
                         <div>
                             <label for="voter-name-input" style="display: block; font-size: 13px; font-weight: 700; color: #334155; margin-bottom: 6px;">
@@ -472,19 +472,50 @@ function escapeHtml(str) {
     });
 }
 
-async function handleVoteSubmit(event) {
-    event.preventDefault();
-    const name = document.getElementById('voter-name-input').value.trim();
-    const choice = document.querySelector('input[name="vote-choice"]:checked').value;
-    const restaurant = document.getElementById('voter-restaurant-select').value;
-    const note = document.getElementById('voter-note-input').value.trim();
+function showToast(message, isError = false) {
+    let toast = document.getElementById('vote-toast');
+    if (!toast) {
+        toast = document.createElement('div');
+        toast.id = 'vote-toast';
+        toast.style.cssText = 'position: fixed; bottom: 20px; right: 20px; padding: 12px 20px; border-radius: 10px; font-weight: 700; font-size: 14px; color: #ffffff; z-index: 99999; box-shadow: 0 10px 25px rgba(0,0,0,0.2); transition: all 0.3s ease; opacity: 0; transform: translateY(10px);';
+        document.body.appendChild(toast);
+    }
+    toast.style.background = isError ? '#ef4444' : '#059669';
+    toast.innerText = message;
+    toast.style.opacity = '1';
+    toast.style.transform = 'translateY(0)';
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateY(10px)';
+    }, 2500);
+}
 
-    if (!name) return;
+async function handleVoteSubmit(event) {
+    if (event) {
+        event.preventDefault();
+    }
+    
+    const nameInput = document.getElementById('voter-name-input');
+    const name = nameInput ? nameInput.value.trim() : '';
+
+    if (!name) {
+        alert("Будь ласка, введіть ваше ім'я!");
+        return false;
+    }
+
+    const choiceEl = document.querySelector('input[name="vote-choice"]:checked');
+    const choice = choiceEl ? choiceEl.value : 'going';
+    
+    const restEl = document.getElementById('voter-restaurant-select');
+    const restaurant = restEl ? restEl.value : '';
+    
+    const noteEl = document.getElementById('voter-note-input');
+    const note = noteEl ? noteEl.value.trim() : '';
 
     localStorage.setItem('diner_user_name', name);
 
     if (choice === 'going') {
-        launchFireworks();
+        try { launchFireworks(); } catch(e) {}
     }
 
     const today = getTodayStr();
@@ -496,40 +527,7 @@ async function handleVoteSubmit(event) {
         updated_at: new Date().toISOString()
     };
 
-    // 1. Try Firebase Realtime Database
-    if (FIREBASE_DB_URL) {
-        try {
-            const url = `${FIREBASE_DB_URL.replace(/\/$/, '')}/votes/${today}/${encodeURIComponent(name)}.json`;
-            const res = await fetch(url, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(voteData)
-            });
-            if (res.ok) {
-                fetchVotes();
-                return;
-            }
-        } catch (e) {}
-    }
-
-    // 2. Try Local Server API
-    try {
-        const res = await fetch('/api/votes', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name, choice, restaurant, note })
-        });
-        if (res.ok) {
-            const data = await res.json();
-            if (data.success) {
-                currentVotes = data.votes;
-                renderVotes(currentVotes, data.summary);
-                return;
-            }
-        }
-    } catch (e) {}
-
-    // 3. Fallback to LocalStorage
+    // 1. Instant local update
     const idx = currentVotes.findIndex(v => v.name.toLowerCase() === name.toLowerCase());
     if (idx >= 0) {
         currentVotes[idx] = voteData;
@@ -538,46 +536,75 @@ async function handleVoteSubmit(event) {
     }
     saveToLocalStorage(currentVotes);
     renderVotes(currentVotes);
+
+    showToast("✅ Ваш голос збережено!");
+
+    // 2. Background Cloud Sync (Firebase)
+    if (FIREBASE_DB_URL) {
+        try {
+            const url = `${FIREBASE_DB_URL.replace(/\/$/, '')}/votes/${today}/${encodeURIComponent(name)}.json`;
+            fetch(url, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(voteData)
+            }).then(res => {
+                if (res.ok) fetchVotes();
+            }).catch(e => {});
+        } catch (e) {}
+    }
+
+    // 3. Background Local Server Sync
+    try {
+        fetch('/api/votes', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name, choice, restaurant, note })
+        }).then(res => res.json()).then(data => {
+            if (data && data.success) {
+                currentVotes = data.votes;
+                renderVotes(currentVotes, data.summary);
+            }
+        }).catch(e => {});
+    } catch (e) {}
+
+    return false;
 }
 
 async function deleteVote(name) {
     const today = getTodayStr();
 
-    // 1. Try Firebase Realtime Database
-    if (FIREBASE_DB_URL) {
-        try {
-            const url = `${FIREBASE_DB_URL.replace(/\/$/, '')}/votes/${today}/${encodeURIComponent(name)}.json`;
-            const res = await fetch(url, { method: 'DELETE' });
-            if (res.ok) {
-                fetchVotes();
-                return;
-            }
-        } catch (e) {}
-    }
-
-    // 2. Try Local Server API
-    try {
-        const res = await fetch(`/api/votes?name=${encodeURIComponent(name)}`, { method: 'DELETE' });
-        if (res.ok) {
-            const data = await res.json();
-            if (data.success) {
-                currentVotes = data.votes;
-                renderVotes(currentVotes, data.summary);
-                return;
-            }
-        }
-    } catch (e) {}
-
-    // 3. Fallback to LocalStorage
+    // 1. Instant local update
     currentVotes = currentVotes.filter(v => v.name.toLowerCase() !== name.toLowerCase());
     saveToLocalStorage(currentVotes);
     renderVotes(currentVotes);
+    showToast("🗑️ Голос видалено");
+
+    // 2. Background Cloud Sync (Firebase)
+    if (FIREBASE_DB_URL) {
+        try {
+            const url = `${FIREBASE_DB_URL.replace(/\/$/, '')}/votes/${today}/${encodeURIComponent(name)}.json`;
+            fetch(url, { method: 'DELETE' }).then(res => {
+                if (res.ok) fetchVotes();
+            }).catch(e => {});
+        } catch (e) {}
+    }
+
+    // 3. Background Local Server Sync
+    try {
+        fetch(`/api/votes?name=${encodeURIComponent(name)}`, { method: 'DELETE' })
+            .then(res => res.json())
+            .then(data => {
+                if (data && data.success) {
+                    currentVotes = data.votes;
+                    renderVotes(currentVotes, data.summary);
+                }
+            }).catch(e => {});
+    } catch (e) {}
 }
 
 function configureFirebaseUrl() {
     const current = FIREBASE_DB_URL || '';
-    const input = prompt('Введіть URL вашої бази даних Firebase Realtime DB:
-(наприклад: https://diner-votes-default-rtdb.firebaseio.com)', current);
+    const input = prompt('Введіть URL вашої бази даних Firebase Realtime DB (наприклад: https://diner-votes-default-rtdb.firebaseio.com):', current);
     if (input !== null) {
         FIREBASE_DB_URL = input.trim();
         localStorage.setItem('diner_firebase_url', FIREBASE_DB_URL);
@@ -596,27 +623,33 @@ function copyVotesForTelegram() {
     const notGoing = currentVotes.filter(v => v.choice === 'not_going');
     const todayStr = new Date().toLocaleDateString('uk-UA');
 
-    let text = `🍱 *Голосування на обід (${todayStr})*\n\n`;
-    text += `🚗 *Їдемо (${going.length}):*\n`;
+    let lines = [];
+    lines.push('🍱 *Голосування на обід (' + todayStr + ')*');
+    lines.push('');
+    lines.push('🚗 *Їдемо (' + going.length + '):*');
     if (going.length > 0) {
         going.forEach(v => {
-            const rStr = v.restaurant ? ` [${v.restaurant}]` : '';
-            const note = v.note ? ` _(${v.note})_` : '';
-            text += `  • ${v.name}${rStr}${note}\n`;
+            const rStr = v.restaurant ? ' [' + v.restaurant + ']' : '';
+            const note = v.note ? ' _(' + v.note + ')_' : '';
+            lines.push('  • ' + v.name + rStr + note);
         });
     } else {
-        text += `  _(нікого)_\n`;
+        lines.push('  _(нікого)_');
     }
 
-    text += `\n🏠 *Не їдемо (${notGoing.length}):*\n`;
+    lines.push('');
+    lines.push('🏠 *Не їдемо (' + notGoing.length + '):*');
     if (notGoing.length > 0) {
         notGoing.forEach(v => {
-            const note = v.note ? ` _(${v.note})_` : '';
-            text += `  • ${v.name}${note}\n`;
+            const note = v.note ? ' _(' + v.note + ')_' : '';
+            lines.push('  • ' + v.name + note);
         });
     } else {
-        text += `  _(нікого)_\n`;
+        lines.push('  _(нікого)_');
     }
+
+    const text = lines.join('
+');
 
     navigator.clipboard.writeText(text).then(() => {
         const btn = document.getElementById('copy-tg-btn');
@@ -628,7 +661,9 @@ function copyVotesForTelegram() {
             btn.style.background = '#0284c7';
         }, 2000);
     }).catch(err => {
-        alert('Результат:\n\n' + text);
+        alert('Результат:
+
+' + text);
     });
 }
 
