@@ -531,9 +531,7 @@ document.addEventListener('DOMContentLoaded', () => {
     setInterval(updateTimeStatus, 60000); // Check time every minute
     
     // fetchVotes is now called inside checkAuthStatus if logged in
-    setInterval(() => {
-        if (authToken) fetchVotes();
-    }, 3000);
+    // Automatic polling is disabled. Users must refresh manually or vote to see updates.
     initFireworksCanvas();
 });
 
@@ -876,6 +874,13 @@ async function handleVoteSubmit(event) {
     
     const restEl = document.getElementById('voter-restaurant-select');
     const restaurant = restEl ? restEl.value : '';
+    
+    if (choice === 'going' && !restaurant) {
+        alert('Будь ласка, оберіть заклад!');
+        submitBtn.disabled = false;
+        submitBtn.innerText = '🗳️ Проголосувати / Оновити';
+        return false;
+    }
     
     const carEl = document.getElementById('voter-car-select');
     const car = carEl ? carEl.value : '';
