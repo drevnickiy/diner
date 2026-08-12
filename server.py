@@ -127,7 +127,8 @@ class VotingHandler(SimpleHTTPRequestHandler):
                 username = data.get('username')
                 password = data.get('password')
                 if parsed.path == '/api/register':
-                    token, user = db.register_user(username, password)
+                    raise ValueError("Реєстрація наразі вимкнена.")
+                    # token, user = db.register_user(username, password)
                 else:
                     token, user = db.login_user(username, password)
                 self._send_json(200, {'success': True, 'token': token, 'username': user})
@@ -175,7 +176,8 @@ class VotingHandler(SimpleHTTPRequestHandler):
                 note = data.get('note', '')
                 vote_date = data.get('date')
 
-                votes = db.upsert_vote(name=name, choice=choice, restaurant=restaurant, car=car, role=role, note=note, vote_date=vote_date)
+                raise ValueError("Запис у базу даних наразі вимкнено адміністратором.")
+                # votes = db.upsert_vote(name=name, choice=choice, restaurant=restaurant, car=car, role=role, note=note, vote_date=vote_date)
 
                 response_data = {
                     'success': True,
@@ -207,7 +209,8 @@ class VotingHandler(SimpleHTTPRequestHandler):
             name = user
             
             if name:
-                votes = db.delete_vote(name, vote_date)
+                raise ValueError("Видалення голосів наразі вимкнено адміністратором.")
+                # votes = db.delete_vote(name, vote_date)
                 going_count = sum(1 for v in votes if v['choice'] == 'going')
                 not_going_count = sum(1 for v in votes if v['choice'] == 'not_going')
                 response_data = {
