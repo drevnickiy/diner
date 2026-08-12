@@ -280,7 +280,12 @@ def get_user_by_token(token):
         else:
             cursor = conn.cursor()
             
-        execute(cursor, 'SELECT s.username, u.car FROM sessions s JOIN users u ON s.username = u.username WHERE s.token = ?', (token,))
+        if IS_POSTGRES:
+            query = "SELECT s.username, u.car FROM sessions s JOIN users u ON s.username = u.username WHERE s.token = ? AND s.created_at >= NOW() - INTERVAL '2 minutes'"
+        else:
+            query = "SELECT s.username, u.car FROM sessions s JOIN users u ON s.username = u.username WHERE s.token = ? AND s.created_at >= datetime('now', '-2 minutes')"
+            
+        execute(cursor, query, (token,))
         row = cursor.fetchone()
         return {'username': row['username'], 'car': row['car']} if row else None
 

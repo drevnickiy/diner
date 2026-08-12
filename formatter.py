@@ -589,6 +589,7 @@ async function fetchVotes() {{
         const res = await fetch('/api/votes', {{
             headers: {{ 'Authorization': `Bearer ${{authToken}}` }}
         }});
+        if (res.status === 401) {{ handleLogout(); return; }}
         const data = await res.json();
         if (data.success) {{
             currentVotes = data.votes || [];
@@ -842,7 +843,10 @@ async function handleVoteSubmit(event) {{
                 'Authorization': `Bearer ${{authToken}}`
             }},
             body: JSON.stringify({{ choice, restaurant, car, role, note }})
-        }}).then(res => res.json()).then(data => {{
+        }}).then(res => {{
+            if (res.status === 401) {{ handleLogout(); throw new Error('Unauthorized'); }}
+            return res.json();
+        }}).then(data => {{
             if (data && data.success) {{
                 currentVotes = data.votes;
                 renderVotes(currentVotes, data.summary);
@@ -870,7 +874,10 @@ async function deleteVote(name) {{
             method: 'DELETE',
             headers: {{ 'Authorization': `Bearer ${{authToken}}` }}
         }})
-            .then(res => res.json())
+            .then(res => {{
+                if (res.status === 401) {{ handleLogout(); throw new Error('Unauthorized'); }}
+                return res.json();
+            }})
             .then(data => {{
                 if (data && data.success) {{
                     currentVotes = data.votes;
