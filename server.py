@@ -154,9 +154,20 @@ class VotingHandler(SimpleHTTPRequestHandler):
             try:
                 data = json.loads(body)
                 
-                # Time window check disabled for testing (allow voting at any time)
-                # force = params.get('force', ['false'])[0].lower() == 'true' or data.get('force') is True
-                # if not force: ...
+                # Check Kyiv time window (11:30 - 12:00) unless force=true
+                params = parse_qs(parsed.query)
+                force = params.get('force', ['false'])[0].lower() == 'true' or data.get('force') is True
+                
+                if not force:
+                    try:
+                        from zoneinfo import ZoneInfo
+                        now = datetime.now(ZoneInfo("Europe/Kyiv"))
+                    except Exception:
+                        now = datetime.now()
+                    total_min = now.hour * 60 + now.minute
+                    if not (690 <= total_min < 720):
+                        time_str = now.strftime('%H:%M:%S')
+                        raise ValueError(f"Голосування закрите! Зараз {time_str} за Києвом. Приймається лише з 11:30 до 12:00.")
 
                 name = user['username']
                 choice = data.get('choice')

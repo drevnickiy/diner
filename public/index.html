@@ -571,8 +571,7 @@ function getKyivTimeInfo() {
         if (p.type === 'second') second = parseInt(p.value, 10);
     });
     const totalMinutes = hour * 60 + minute;
-    // Voting window temporarily expanded for testing (always open)
-    const isOpen = true;
+    const isOpen = totalMinutes >= 690 && totalMinutes < 720;
     const timeStr = `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}:${String(second).padStart(2, '0')}`;
     return { isOpen, timeStr, hour, minute };
 }

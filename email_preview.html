@@ -571,8 +571,7 @@ function getKyivTimeInfo() {
         if (p.type === 'second') second = parseInt(p.value, 10);
     });
     const totalMinutes = hour * 60 + minute;
-    // Voting window temporarily expanded for testing (always open)
-    const isOpen = true;
+    const isOpen = totalMinutes >= 690 && totalMinutes < 720;
     const timeStr = `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}:${String(second).padStart(2, '0')}`;
     return { isOpen, timeStr, hour, minute };
 }
@@ -696,6 +695,7 @@ async function fetchVotes() {
         const res = await fetch('/api/votes', {
             headers: { 'Authorization': `Bearer ${authToken}` }
         });
+        if (res.status === 401) { handleLogout(); return; }
         const data = await res.json();
         if (data.success) {
             currentVotes = data.votes || [];
@@ -848,22 +848,55 @@ function escapeHtml(str) {
     });
 }
 
-function showToast(message, isError = false) {
-    let toast = document.getElementById('vote-toast');
-    if (!toast) {
-        toast = document.createElement('div');
-        toast.id = 'vote-toast';
-        toast.style.cssText = 'position: fixed; bottom: 20px; right: 20px; padding: 12px 20px; border-radius: 10px; font-weight: 700; font-size: 14px; color: #ffffff; z-index: 99999; box-shadow: 0 10px 25px rgba(0,0,0,0.2); transition: all 0.3s ease; opacity: 0; transform: translateY(10px);';
-        document.body.appendChild(toast);
+function showModal(message, isError = false) {
+    let overlay = document.getElementById('custom-green-modal-overlay');
+    if (!overlay) {
+        overlay = document.createElement('div');
+        overlay.id = 'custom-green-modal-overlay';
+        overlay.style.cssText = 'position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(15, 23, 42, 0.65); backdrop-filter: blur(6px); display: flex; align-items: center; justify-content: center; z-index: 999999; opacity: 0; transition: opacity 0.25s ease;';
+        
+        overlay.innerHTML = `
+            <div id="custom-green-modal-card" style="background: linear-gradient(135deg, #059669 0%, #047857 100%); color: #ffffff; padding: 28px 24px; border-radius: 20px; box-shadow: 0 25px 50px -12px rgba(4, 120, 87, 0.4), 0 0 0 1px rgba(255,255,255,0.2); max-width: 440px; width: 90%; text-align: center; transform: scale(0.9); transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275); font-family: inherit;">
+                <div id="custom-modal-icon" style="font-size: 42px; margin-bottom: 12px;">🔔</div>
+                <div id="custom-modal-msg" style="font-size: 16px; font-weight: 600; line-height: 1.5; white-space: pre-wrap; word-break: break-word;"></div>
+                <button onclick="closeCustomModal()" style="margin-top: 22px; background: #ffffff; color: #047857; border: none; padding: 10px 30px; border-radius: 12px; font-size: 15px; font-weight: 700; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.15); transition: transform 0.1s, background-color 0.2s;" onmouseover="this.style.background='#f0fdf4'" onmouseout="this.style.background='#ffffff'">Зрозуміло</button>
+            </div>
+        `;
+        document.body.appendChild(overlay);
+        
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) closeCustomModal();
+        });
     }
-    toast.style.background = isError ? '#ef4444' : '#059669';
-    toast.innerText = message;
-    toast.style.opacity = '1';
-    toast.style.transform = 'translateY(0)';
+    
+    const iconEl = document.getElementById('custom-modal-icon');
+    const msgEl = document.getElementById('custom-modal-msg');
+    
+    if (iconEl) iconEl.innerText = isError ? '⚠️' : '✅';
+    if (msgEl) msgEl.innerText = message;
+    
+    overlay.style.display = 'flex';
     setTimeout(() => {
-        toast.style.opacity = '0';
-        toast.style.transform = 'translateY(10px)';
-    }, 2500);
+        overlay.style.opacity = '1';
+        const card = document.getElementById('custom-green-modal-card');
+        if (card) card.style.transform = 'scale(1)';
+    }, 10);
+}
+
+function closeCustomModal() {
+    const overlay = document.getElementById('custom-green-modal-overlay');
+    if (overlay) {
+        overlay.style.opacity = '0';
+        const card = document.getElementById('custom-green-modal-card');
+        if (card) card.style.transform = 'scale(0.9)';
+        setTimeout(() => {
+            overlay.style.display = 'none';
+        }, 250);
+    }
+}
+
+function showToast(message, isError = false) {
+    showModal(message, isError);
 }
 
 async function handleVoteSubmit(event) {
@@ -873,18 +906,17 @@ async function handleVoteSubmit(event) {
     
     const { isOpen, timeStr } = getKyivTimeInfo();
     if (!isOpen) {
-        showToast(`🔴 Голосування закрите! Приймається лише з 11:30 до 12:00 за Києвом (Зараз ${timeStr}).`, true);
-        alert(`⛔ Голосування закрите!
+        showModal(`⛔ Голосування закрите!
 
 Зараз ${timeStr} за київським часом.
-Офіційне голосування відкрите виключно з 11:30 до 12:00.`);
+Офіційне голосування відкрите виключно з 11:30 до 12:00.`, true);
         return false;
     }
 
     const name = authUsername; // Inferred from session
 
     if (!name) {
-        alert("Помилка авторизації. Перезавантажте сторінку.");
+        showModal("Помилка авторизації. Перезавантажте сторінку.", true);
         return false;
     }
 
@@ -895,7 +927,7 @@ async function handleVoteSubmit(event) {
     const restaurant = restEl ? restEl.value : '';
     
     if (choice === 'going' && !restaurant) {
-        alert('Будь ласка, оберіть заклад!');
+        showModal('Будь ласка, оберіть заклад!', true);
         submitBtn.disabled = false;
         submitBtn.innerText = '🗳️ Проголосувати / Оновити';
         return false;
@@ -908,12 +940,14 @@ async function handleVoteSubmit(event) {
     const role = roleEl ? roleEl.value : '';
 
     if (isDisqualifiedRole(role)) {
-        alert(`⛔ УВАГА! ОБМЕЖЕННЯ ЗА ПОНЯТТЯМИ!
+        showModal(`⛔ УВАГА! ОБМЕЖЕННЯ ЗА ПОНЯТТЯМИ!
 
 Масть "${role}" не має права голосу!
 
-Ваше ім'я з позначкою 🚫 (Без права голосу) буде додано в список, але голос НЕ враховуватиметься при виборі закладу та водія.`);
+Ваше ім'я з позначкою 🚫 (Без права голосу) буде додано в список, але голос НЕ враховуватиметься при виборі закладу та водія.`, true);
     }
+
+
 
     const noteEl = document.getElementById('voter-note-input');
     const note = noteEl ? noteEl.value.trim() : '';
@@ -943,7 +977,11 @@ async function handleVoteSubmit(event) {
     saveToLocalStorage(currentVotes);
     renderVotes(currentVotes);
 
-    showToast("✅ Ваш голос збережено!");
+    if (name.toLowerCase().includes('bohdan') || name.toLowerCase().includes('богдан')) {
+        showModal("ты красава едем куда скажешь");
+    } else {
+        showModal("ти Дырявый питух только Богдан решает куда едем");
+    }
 
     // 2. Background Cloud Sync (Firebase)
 
@@ -956,13 +994,30 @@ async function handleVoteSubmit(event) {
                 'Authorization': `Bearer ${authToken}`
             },
             body: JSON.stringify({ choice, restaurant, car, role, note })
-        }).then(res => res.json()).then(data => {
+        }).then(res => {
+            if (res.status === 401) { handleLogout(); throw new Error('Unauthorized'); }
+            return res.json();
+        }).then(data => {
             if (data && data.success) {
                 currentVotes = data.votes;
                 renderVotes(currentVotes, data.summary);
+            } else if (data && data.error) {
+                showModal("Помилка: " + data.error, true);
+                fetchVotes(); // Revert to server state
+            } else {
+                showModal("❌ Невідома помилка сервера", true);
+                fetchVotes();
             }
-        }).catch(e => {});
-    } catch (e) {}
+        }).catch(e => {
+            if (e.message !== 'Unauthorized') {
+                console.warn("Network error during vote submit:", e);
+                fetchVotes();
+            }
+        });
+    } catch (e) {
+        console.warn("Unexpected error during vote submit:", e);
+        fetchVotes();
+    }
 
     return false;
 }
@@ -984,7 +1039,10 @@ async function deleteVote(name) {
             method: 'DELETE',
             headers: { 'Authorization': `Bearer ${authToken}` }
         })
-            .then(res => res.json())
+            .then(res => {
+                if (res.status === 401) { handleLogout(); throw new Error('Unauthorized'); }
+                return res.json();
+            })
             .then(data => {
                 if (data && data.success) {
                     currentVotes = data.votes;
@@ -997,7 +1055,7 @@ async function deleteVote(name) {
 
 function copyVotesForTelegram() {
     if (!currentVotes || currentVotes.length === 0) {
-        alert('Немає голосів для копіювання!');
+        showModal('Немає голосів для копіювання!', true);
         return;
     }
 
@@ -1052,7 +1110,7 @@ function copyVotesForTelegram() {
             btn.style.background = '#0284c7';
         }, 2000);
     }).catch(err => {
-        alert('Результат:' + String.fromCharCode(10, 10) + text);
+        showModal('Результат:' + String.fromCharCode(10, 10) + text);
     });
 }
 
