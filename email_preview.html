@@ -21,6 +21,141 @@
             </p>
         </div>
 
+        <!-- Canvas Fireworks Container -->
+        <canvas id="fireworks-canvas" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 9999;"></canvas>
+
+        <!-- Voting Widget -->
+        <div id="voting-widget" style="background: #ffffff; border-radius: 16px; border: 1px solid #e2e8f0; padding: 24px; margin-bottom: 24px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05); box-sizing: border-box;">
+            
+            <!-- Header & Action Buttons -->
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; border-bottom: 2px solid #f1f5f9; padding-bottom: 16px; margin-bottom: 20px;">
+                <div>
+                    <h2 style="margin: 0; font-size: 22px; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 8px;">
+                        🚗 Голосування: Їдемо чи Не їдемо?
+                    </h2>
+                    <p style="margin: 4px 0 0 0; font-size: 13px; color: #64748b;">
+                        Обирайте заклад, вводьте ім'я та голосуйте! Переможець визначається за кількістю голосів.
+                    </p>
+                </div>
+                <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                    <button id="fireworks-btn" onclick="launchFireworks()" style="background: linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%); color: #ffffff; border: none; padding: 8px 14px; border-radius: 8px; font-weight: 700; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 4px 12px rgba(236,72,153,0.3); transition: transform 0.1s;">
+                        🎆 Феєрверк!
+                    </button>
+                    <button id="copy-tg-btn" onclick="copyVotesForTelegram()" style="background: #0284c7; color: #ffffff; border: none; padding: 8px 14px; border-radius: 8px; font-weight: 600; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: all 0.2s;">
+                        📋 Скопіювати для Telegram
+                    </button>
+                </div>
+            </div>
+
+            <!-- Winning Restaurant Banner -->
+            <div id="winner-banner" style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border: 2px solid #f59e0b; border-radius: 12px; padding: 14px 18px; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <span style="font-size: 28px;">🏆</span>
+                    <div>
+                        <div style="font-size: 11px; font-weight: 800; color: #b45309; text-transform: uppercase; letter-spacing: 1px;">
+                            Лідер голосування сьогодні:
+                        </div>
+                        <div id="winner-title" style="font-size: 18px; font-weight: 800; color: #78350f;">
+                            Очікування перших голосів...
+                        </div>
+                    </div>
+                </div>
+                <div id="restaurant-breakdown" style="display: flex; gap: 8px; flex-wrap: wrap;">
+                    <!-- Restaurant tally pills -->
+                </div>
+            </div>
+
+            <!-- Main Voting Content Grid -->
+            <div style="display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-start;">
+                
+                <!-- Form Section -->
+                <div style="flex: 1 1 320px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 18px;">
+                    <form id="vote-form" onsubmit="handleVoteSubmit(event)" style="display: flex; flex-direction: column; gap: 14px;">
+                        
+                        <div>
+                            <label for="voter-name-input" style="display: block; font-size: 13px; font-weight: 700; color: #334155; margin-bottom: 6px;">
+                                👤 Ваше ім'я <span style="color: #ef4444;">*</span>
+                            </label>
+                            <input type="text" id="voter-name-input" required placeholder="Наприклад: Богдан" style="width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; outline: none; box-sizing: border-box; transition: border-color 0.2s;">
+                        </div>
+
+                        <div>
+                            <label style="display: block; font-size: 13px; font-weight: 700; color: #334155; margin-bottom: 8px;">
+                                🎯 Ваш вибір <span style="color: #ef4444;">*</span>
+                            </label>
+                            <div style="display: flex; gap: 10px;">
+                                <label style="flex: 1; border: 2px solid #10b981; background: #ecfdf5; border-radius: 10px; padding: 12px 10px; text-align: center; cursor: pointer; transition: all 0.2s;">
+                                    <input type="radio" name="vote-choice" value="going" checked style="margin-right: 4px; accent-color: #059669;">
+                                    <strong style="color: #065f46; font-size: 14px;">🚗 Їдемо</strong>
+                                </label>
+                                <label style="flex: 1; border: 2px solid #f43f5e; background: #fff1f2; border-radius: 10px; padding: 12px 10px; text-align: center; cursor: pointer; transition: all 0.2s;">
+                                    <input type="radio" name="vote-choice" value="not_going" style="margin-right: 4px; accent-color: #e11d48;">
+                                    <strong style="color: #9f1239; font-size: 14px;">🏠 Не їдемо</strong>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label for="voter-restaurant-select" style="display: block; font-size: 13px; font-weight: 700; color: #334155; margin-bottom: 6px;">
+                                🍽️ Оберіть заклад (куди їдемо):
+                            </label>
+                            <select id="voter-restaurant-select" style="width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; outline: none; background: #ffffff; color: #0f172a; cursor: pointer;">
+                                <option value="Chacha che (Чача)">🍷 Chacha che (Чача)</option>
+                                <option value="Eric / Bierstube (Ерік)">🍺 Eric / Bierstube (Ерік)</option>
+                                <option value="Будь-яке / Без різниці">🤷 Будь-яке / Без різниці</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label for="voter-note-input" style="display: block; font-size: 13px; font-weight: 700; color: #334155; margin-bottom: 6px;">
+                                💬 Примітка (необов'язково)
+                            </label>
+                            <input type="text" id="voter-note-input" placeholder="напр. на 13:15 / з колегою" style="width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; outline: none; box-sizing: border-box;">
+                        </div>
+
+                        <button type="submit" id="submit-vote-btn" style="background: linear-gradient(135deg, #0f172a 0%, #2563eb 100%); color: #ffffff; border: none; padding: 12px; border-radius: 8px; font-size: 15px; font-weight: 700; cursor: pointer; box-shadow: 0 4px 12px rgba(37,99,235,0.25); transition: transform 0.1s;">
+                            🗳️ Проголосувати / Оновити
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Dashboard Section -->
+                <div style="flex: 1 1 380px; display: flex; flex-direction: column; gap: 16px;">
+                    
+                    <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                        <div style="flex: 1; min-width: 110px; background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 10px; padding: 12px; text-align: center;">
+                            <div style="font-size: 22px; font-weight: 800; color: #047857;" id="count-going">0</div>
+                            <div style="font-size: 12px; font-weight: 700; color: #065f46; text-transform: uppercase;">🚗 Їдемо</div>
+                        </div>
+                        <div style="flex: 1; min-width: 110px; background: #fff1f2; border: 1px solid #fecdd3; border-radius: 10px; padding: 12px; text-align: center;">
+                            <div style="font-size: 22px; font-weight: 800; color: #be123c;" id="count-not-going">0</div>
+                            <div style="font-size: 12px; font-weight: 700; color: #9f1239; text-transform: uppercase;">🏠 Не їдемо</div>
+                        </div>
+                        <div style="flex: 1; min-width: 110px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px; text-align: center;">
+                            <div style="font-size: 22px; font-weight: 800; color: #0f172a;" id="count-total">0</div>
+                            <div style="font-size: 12px; font-weight: 700; color: #64748b; text-transform: uppercase;">👥 Всього</div>
+                        </div>
+                    </div>
+
+                    <div style="background: #f1f5f9; border-radius: 999px; height: 12px; overflow: hidden; display: flex;">
+                        <div id="progress-going" style="width: 0%; background: #10b981; transition: width 0.4s ease;"></div>
+                        <div id="progress-not-going" style="width: 0%; background: #f43f5e; transition: width 0.4s ease;"></div>
+                    </div>
+
+                    <div style="border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px; background: #ffffff;">
+                        <div style="font-size: 13px; font-weight: 700; color: #475569; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.5px;">
+                            📋 Учасники голосування:
+                        </div>
+                        <div id="participants-list" style="display: flex; flex-direction: column; gap: 8px; max-height: 240px; overflow-y: auto;">
+                            <div style="color: #94a3b8; font-size: 13px; font-style: italic; text-align: center; padding: 12px;">
+                                Поки немає голосів. Будьте першим!
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Restaurant Content 2-Column Grid -->
         <div style="display: flex; flex-wrap: wrap; gap: 20px; align-items: flex-start;">
             
@@ -157,5 +292,337 @@
             Сформовано автоматично • <a href="https://carry.ck.ua" style="color: #2563eb; text-decoration: none;">Carry.ck.ua</a>
         </div>
     </div>
+
+<script>
+let currentVotes = [];
+let lastWinner = null;
+
+document.addEventListener('DOMContentLoaded', () => {
+    const savedName = localStorage.getItem('diner_user_name');
+    if (savedName) {
+        const input = document.getElementById('voter-name-input');
+        if (input) input.value = savedName;
+    }
+    fetchVotes();
+    setInterval(fetchVotes, 4000);
+    initFireworksCanvas();
+});
+
+async function fetchVotes() {
+    try {
+        const res = await fetch('/api/votes');
+        if (res.ok) {
+            const data = await res.json();
+            if (data.success) {
+                currentVotes = data.votes || [];
+                renderVotes(currentVotes, data.summary);
+                return;
+            }
+        }
+    } catch (e) {}
+    loadFromLocalStorage();
+}
+
+function loadFromLocalStorage() {
+    const today = new Date().toISOString().split('T')[0];
+    const key = 'diner_votes_' + today;
+    try {
+        const data = localStorage.getItem(key);
+        currentVotes = data ? JSON.parse(data) : [];
+    } catch (e) {
+        currentVotes = [];
+    }
+    renderVotes(currentVotes);
+}
+
+function saveToLocalStorage(votes) {
+    const today = new Date().toISOString().split('T')[0];
+    const key = 'diner_votes_' + today;
+    localStorage.setItem(key, JSON.stringify(votes));
+}
+
+function renderVotes(votes, summary) {
+    const goingVotes = votes.filter(v => v.choice === 'going');
+    const notGoingVotes = votes.filter(v => v.choice === 'not_going');
+    
+    document.getElementById('count-going').innerText = goingVotes.length;
+    document.getElementById('count-not-going').innerText = notGoingVotes.length;
+    document.getElementById('count-total').innerText = votes.length;
+
+    const total = votes.length || 1;
+    const goingPct = (goingVotes.length / total) * 100;
+    const notGoingPct = (notGoingVotes.length / total) * 100;
+
+    document.getElementById('progress-going').style.width = (votes.length ? goingPct : 0) + '%';
+    document.getElementById('progress-not-going').style.width = (votes.length ? notGoingPct : 0) + '%';
+
+    // Calculate Restaurant Winner & Breakdown
+    let winnerName = summary ? summary.winner : null;
+    let winnerVotes = summary ? summary.winner_votes : 0;
+    let restTally = summary ? summary.restaurants : {};
+
+    if (!summary) {
+        restTally = {};
+        goingVotes.forEach(v => {
+            const r = v.restaurant || 'Будь-яке / Без різниці';
+            restTally[r] = (restTally[r] || 0) + 1;
+        });
+        let maxCount = 0;
+        for (const [r, count] of Object.entries(restTally)) {
+            if (count > maxCount) {
+                maxCount = count;
+                winnerName = r;
+                winnerVotes = count;
+            }
+        }
+    }
+
+    const winnerTitleEl = document.getElementById('winner-title');
+    const breakdownEl = document.getElementById('restaurant-breakdown');
+
+    if (winnerName && winnerVotes > 0) {
+        winnerTitleEl.innerHTML = `🎉 <strong>${escapeHtml(winnerName)}</strong> — ${winnerVotes} ${pluralVotes(winnerVotes)}!`;
+        if (lastWinner !== winnerName && goingVotes.length > 0) {
+            lastWinner = winnerName;
+            launchFireworks();
+        }
+    } else {
+        winnerTitleEl.innerText = 'Очікування перших голосів...';
+    }
+
+    let breakdownHtml = '';
+    for (const [r, count] of Object.entries(restTally)) {
+        breakdownHtml += `<span style="background: #ffffff; color: #78350f; font-weight: 700; font-size: 12px; padding: 4px 10px; border-radius: 20px; border: 1px solid #fcd34d;">${escapeHtml(r)}: ${count}</span>`;
+    }
+    breakdownEl.innerHTML = breakdownHtml;
+
+    // Render Participant Cards
+    const container = document.getElementById('participants-list');
+    if (votes.length === 0) {
+        container.innerHTML = '<div style="color: #94a3b8; font-size: 13px; font-style: italic; text-align: center; padding: 12px;">Поки немає голосів. Будьте першим!</div>';
+        return;
+    }
+
+    let html = '';
+    votes.forEach(v => {
+        const isGoing = v.choice === 'going';
+        const badgeBg = isGoing ? '#ecfdf5' : '#fff1f2';
+        const badgeBorder = isGoing ? '#a7f3d0' : '#fecdd3';
+        const badgeText = isGoing ? '#047857' : '#be123c';
+        const icon = isGoing ? '🚗 Їдемо' : '🏠 Не їдемо';
+        const restStr = (isGoing && v.restaurant) ? `<span style="background: rgba(255,255,255,0.8); border: 1px solid #cbd5e1; border-radius: 6px; padding: 2px 6px; font-size: 11px; color: #334155; margin-left: 4px;">📍 ${escapeHtml(v.restaurant)}</span>` : '';
+        const noteStr = v.note ? `<span style="color: #64748b; font-size: 12px; margin-left: 4px;">(${escapeHtml(v.note)})</span>` : '';
+
+        html += `
+        <div style="display: flex; justify-content: space-between; align-items: center; background: ${badgeBg}; border: 1px solid ${badgeBorder}; border-radius: 8px; padding: 8px 12px;">
+            <div style="font-size: 14px; font-weight: 600; color: #0f172a; display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+                <span style="font-size: 12px; font-weight: 700; color: ${badgeText}; background: #ffffff; padding: 2px 8px; border-radius: 6px; border: 1px solid ${badgeBorder};">${icon}</span>
+                <strong>${escapeHtml(v.name)}</strong>
+                ${restStr}
+                ${noteStr}
+            </div>
+            <button onclick="deleteVote('${escapeHtml(v.name)}')" title="Видалити голос" style="background: transparent; border: none; color: #94a3b8; font-size: 14px; cursor: pointer; padding: 2px 6px; border-radius: 4px; transition: color 0.2s;" onmouseover="this.style.color='#ef4444'" onmouseout="this.style.color='#94a3b8'">✕</button>
+        </div>
+        `;
+    });
+
+    container.innerHTML = html;
+}
+
+function pluralVotes(count) {
+    if (count === 1) return 'голос';
+    if (count >= 2 && count <= 4) return 'голоси';
+    return 'голосів';
+}
+
+function escapeHtml(str) {
+    if (!str) return '';
+    return str.replace(/[&<>"']/g, function(m) {
+        return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[m];
+    });
+}
+
+async function handleVoteSubmit(event) {
+    event.preventDefault();
+    const name = document.getElementById('voter-name-input').value.trim();
+    const choice = document.querySelector('input[name="vote-choice"]:checked').value;
+    const restaurant = document.getElementById('voter-restaurant-select').value;
+    const note = document.getElementById('voter-note-input').value.trim();
+
+    if (!name) return;
+
+    localStorage.setItem('diner_user_name', name);
+
+    if (choice === 'going') {
+        launchFireworks();
+    }
+
+    try {
+        const res = await fetch('/api/votes', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name, choice, restaurant, note })
+        });
+        if (res.ok) {
+            const data = await res.json();
+            if (data.success) {
+                currentVotes = data.votes;
+                renderVotes(currentVotes, data.summary);
+                return;
+            }
+        }
+    } catch (e) {}
+
+    const idx = currentVotes.findIndex(v => v.name.toLowerCase() === name.toLowerCase());
+    const newVote = { name, choice, restaurant, note, updated_at: new Date().toISOString() };
+    if (idx >= 0) {
+        currentVotes[idx] = newVote;
+    } else {
+        currentVotes.push(newVote);
+    }
+    saveToLocalStorage(currentVotes);
+    renderVotes(currentVotes);
+}
+
+async function deleteVote(name) {
+    try {
+        const res = await fetch(`/api/votes?name=${encodeURIComponent(name)}`, {
+            method: 'DELETE'
+        });
+        if (res.ok) {
+            const data = await res.json();
+            if (data.success) {
+                currentVotes = data.votes;
+                renderVotes(currentVotes, data.summary);
+                return;
+            }
+        }
+    } catch (e) {}
+
+    currentVotes = currentVotes.filter(v => v.name.toLowerCase() !== name.toLowerCase());
+    saveToLocalStorage(currentVotes);
+    renderVotes(currentVotes);
+}
+
+function copyVotesForTelegram() {
+    if (!currentVotes || currentVotes.length === 0) {
+        alert('Немає голосів для копіювання!');
+        return;
+    }
+
+    const going = currentVotes.filter(v => v.choice === 'going');
+    const notGoing = currentVotes.filter(v => v.choice === 'not_going');
+    const todayStr = new Date().toLocaleDateString('uk-UA');
+
+    let text = `🍱 *Голосування на обід (${todayStr})*\n\n`;
+    text += `🚗 *Їдемо (${going.length}):*\n`;
+    if (going.length > 0) {
+        going.forEach(v => {
+            const rStr = v.restaurant ? ` [${v.restaurant}]` : '';
+            const note = v.note ? ` _(${v.note})_` : '';
+            text += `  • ${v.name}${rStr}${note}\n`;
+        });
+    } else {
+        text += `  _(нікого)_\n`;
+    }
+
+    text += `\n🏠 *Не їдемо (${notGoing.length}):*\n`;
+    if (notGoing.length > 0) {
+        notGoing.forEach(v => {
+            const note = v.note ? ` _(${v.note})_` : '';
+            text += `  • ${v.name}${note}\n`;
+        });
+    } else {
+        text += `  _(нікого)_\n`;
+    }
+
+    navigator.clipboard.writeText(text).then(() => {
+        const btn = document.getElementById('copy-tg-btn');
+        const origText = btn.innerHTML;
+        btn.innerHTML = '✅ Скопійовано!';
+        btn.style.background = '#059669';
+        setTimeout(() => {
+            btn.innerHTML = origText;
+            btn.style.background = '#0284c7';
+        }, 2000);
+    }).catch(err => {
+        alert('Результат:\n\n' + text);
+    });
+}
+
+/* Canvas Fireworks Celebration Engine */
+let fwCanvas, fwCtx, particles = [];
+
+function initFireworksCanvas() {
+    fwCanvas = document.getElementById('fireworks-canvas');
+    if (!fwCanvas) return;
+    fwCtx = fwCanvas.getContext('2d');
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
+    requestAnimationFrame(updateFireworks);
+}
+
+function resizeCanvas() {
+    if (fwCanvas) {
+        fwCanvas.width = window.innerWidth;
+        fwCanvas.height = window.innerHeight;
+    }
+}
+
+function launchFireworks() {
+    if (!fwCanvas) initFireworksCanvas();
+    const colors = ['#f43f5e', '#10b981', '#3b82f6', '#f59e0b', '#8b5cf6', '#ec4899', '#14b8a6'];
+    
+    const centers = [
+        { x: window.innerWidth * 0.3, y: window.innerHeight * 0.35 },
+        { x: window.innerWidth * 0.5, y: window.innerHeight * 0.25 },
+        { x: window.innerWidth * 0.7, y: window.innerHeight * 0.35 }
+    ];
+
+    centers.forEach(c => {
+        for (let i = 0; i < 45; i++) {
+            const angle = Math.random() * Math.PI * 2;
+            const speed = Math.random() * 8 + 2;
+            particles.push({
+                x: c.x,
+                y: c.y,
+                vx: Math.cos(angle) * speed,
+                vy: Math.sin(angle) * speed,
+                color: colors[Math.floor(Math.random() * colors.length)],
+                size: Math.random() * 4 + 2,
+                alpha: 1,
+                decay: Math.random() * 0.02 + 0.015,
+                gravity: 0.12
+            });
+        }
+    });
+}
+
+function updateFireworks() {
+    if (fwCtx && fwCanvas) {
+        fwCtx.clearRect(0, 0, fwCanvas.width, fwCanvas.height);
+        for (let i = particles.length - 1; i >= 0; i--) {
+            const p = particles[i];
+            p.x += p.vx;
+            p.y += p.vy;
+            p.vy += p.gravity;
+            p.alpha -= p.decay;
+
+            if (p.alpha <= 0) {
+                particles.splice(i, 1);
+            } else {
+                fwCtx.save();
+                fwCtx.globalAlpha = p.alpha;
+                fwCtx.fillStyle = p.color;
+                fwCtx.beginPath();
+                fwCtx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                fwCtx.fill();
+                fwCtx.restore();
+            }
+        }
+    }
+    requestAnimationFrame(updateFireworks);
+}
+</script>
 </body>
 </html>
