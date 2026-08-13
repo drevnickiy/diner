@@ -2,7 +2,15 @@ import os
 import sys
 import hashlib
 import secrets
+import html
+import re
 from datetime import datetime
+
+def sanitize_input(val):
+    if not val or not isinstance(val, str):
+        return '' if val is None else str(val)
+    clean = re.sub(r'<[^>]*>', '', val)
+    return html.escape(clean.strip())
 
 DATABASE_URL = os.environ.get('DATABASE_URL')
 IS_POSTGRES = bool(DATABASE_URL)
@@ -176,11 +184,11 @@ def upsert_vote(name, choice, restaurant='', car='', role='', note='', vote_date
     if choice not in ['going', 'not_going']:
         raise ValueError("Некорректный выбор (ожидается 'going' или 'not_going').")
 
-    name = name.strip().upper()
-    restaurant = restaurant.strip() if restaurant else ''
-    car = car.strip() if car else ''
-    role = role.strip() if role else ''
-    note = note.strip() if note else ''
+    name = sanitize_input(name).upper()
+    restaurant = sanitize_input(restaurant)
+    car = sanitize_input(car)
+    role = sanitize_input(role)
+    note = sanitize_input(note)
 
     if not vote_date:
         vote_date = get_today_date_str()
@@ -252,8 +260,8 @@ def _hash_password(password, salt):
     return hashlib.pbkdf2_hmac('sha256', password.encode('utf-8'), salt, 100000).hex()
 
 def register_user(username, password, car=''):
-    username = username.strip().upper()
-    car = car.strip() if car else ''
+    username = sanitize_input(username).upper()
+    car = sanitize_input(car)
     if not username or not password:
         raise ValueError("Ім'я та пароль не можуть бути порожніми.")
         

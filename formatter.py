@@ -588,7 +588,7 @@ function getCarBadge(car) {{
     if (car === 'Audi') return '🚔 Audi';
     if (car === 'Mazda') return '🚗 Mazda';
     if (car === 'VW') return '🚘 VW';
-    return '🚘 ' + car;
+    return '🚘 ' + escapeHtml(car);
 }}
 
 function renderDriverBanner(driverName, goingCount) {{
