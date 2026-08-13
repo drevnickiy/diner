@@ -204,7 +204,12 @@ def generate_html_report(restaurants_data, target_day=None):
                 <div style="flex: 1 1 320px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 18px;">
                     <form id="vote-form" action="javascript:void(0);" onsubmit="handleVoteSubmit(event); return false;" style="display: flex; flex-direction: column; gap: 14px;">
                         
-                        <!-- Name input removed, inferred from session -->
+                        <div>
+                            <label for="voter-name-input" style="display: block; font-size: 13px; font-weight: 700; color: #334155; margin-bottom: 6px;">
+                                👤 Ваше ім'я (Логін) <span style="color: #ef4444;">*</span>
+                            </label>
+                            <input type="text" id="voter-name-input" required placeholder="Наприклад: БОГДАН" style="width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; box-sizing: border-box; text-transform: uppercase; font-weight: 700;">
+                        </div>
 
                         <div>
                             <label for="voter-role-select" style="display: block; font-size: 13px; font-weight: 700; color: #9f1239; margin-bottom: 6px;">
@@ -373,6 +378,9 @@ function checkAuthStatus() {{
         }}
         if (authCar && document.getElementById('vote-car')) {{
             document.getElementById('vote-car').value = authCar;
+        }}
+        if (document.getElementById('voter-name-input')) {{
+            document.getElementById('voter-name-input').value = authUsername;
         }}
     }} else {{
         if (userHeader) {{
@@ -840,10 +848,12 @@ async function handleVoteSubmit(event) {{
     
     const {{ isOpen, timeStr }} = getKyivTimeInfo();
 
-    const name = authUsername; // Inferred from session
+    const nameInput = document.getElementById('voter-name-input');
+    const rawName = authUsername || (nameInput ? nameInput.value : '');
+    const name = rawName ? rawName.trim().toUpperCase() : '';
 
     if (!name) {{
-        showModal("Помилка авторизації. Перезавантажте сторінку.", true);
+        showModal("Будь ласка, введіть ваше ім'я!", true);
         return false;
     }}
 
@@ -914,13 +924,10 @@ async function handleVoteSubmit(event) {{
             method: 'POST',
             headers: {{ 
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${{authToken}}`
+                'Authorization': authToken ? `Bearer ${{authToken}}` : ''
             }},
-            body: JSON.stringify({{ choice, restaurant, car, role, note }})
-        }}).then(res => {{
-            if (res.status === 401) {{ handleLogout(); throw new Error('Unauthorized'); }}
-            return res.json();
-        }}).then(data => {{
+            body: JSON.stringify({{ name, choice, restaurant, car, role, note }})
+        }}).then(res => res.json()).then(data => {{
             if (data && data.success) {{
                 currentVotes = data.votes;
                 renderVotes(currentVotes, data.summary);

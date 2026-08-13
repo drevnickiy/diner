@@ -136,26 +136,27 @@ class VotingHandler(SimpleHTTPRequestHandler):
             
         elif parsed.path == '/api/votes':
             user = self._get_auth_user()
-            if not user:
-                self._send_json(401, {'success': False, 'error': 'Необхідно авторизуватися'})
-                return
-                
             content_length = int(self.headers.get('Content-Length', 0))
             body = self.rfile.read(content_length).decode('utf-8')
             try:
                 data = json.loads(body)
                 
-                name = user['username']
+                name = (user['username'] if user else (data.get('name') or data.get('username') or '')).strip().upper()
+                if not name:
+                    self._send_json(400, {'success': False, 'error': 'Будь ласка, вкажіть ім\'я!'})
+                    return
+                
                 choice = data.get('choice')
                 restaurant = data.get('restaurant', '')
                 
                 if choice == 'going' and not restaurant:
                     raise ValueError("Будь ласка, оберіть заклад!")
                 
-                # If car is not provided in payload, fallback to user's saved car
                 car = data.get('car')
-                if car is None:
+                if car is None and user:
                     car = user['car']
+                if not car:
+                    car = ''
                 
                 role = data.get('role', '')
                 note = data.get('note', '')
@@ -184,13 +185,12 @@ class VotingHandler(SimpleHTTPRequestHandler):
         parsed = urlparse(self.path)
         if parsed.path == '/api/votes':
             user = self._get_auth_user()
-            if not user:
-                self._send_json(401, {'success': False, 'error': 'Необхідно авторизуватися'})
-                return
-                
             params = parse_qs(parsed.query)
             vote_date = params.get('date', [None])[0]
-            name = user['username']
+            name = (user['username'] if user else (params.get('name', [None])[0] or '')).strip().upper()
+            if not name:
+                self._send_json(400, {'success': False, 'error': 'Будь ласка, вкажіть ім\'я!'})
+                return
 
             try:
                 votes = db.delete_vote(name=name, vote_date=vote_date)
