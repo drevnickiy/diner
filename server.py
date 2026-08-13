@@ -88,7 +88,7 @@ class VotingHandler(SimpleHTTPRequestHandler):
 
     def do_GET(self):
         
-        if not self._check_rate_limit(limit=30):
+        if not self._check_rate_limit(limit=120):
             self._send_json(429, {'success': False, 'error': 'Забагато запитів. Зачекайте 1 хвилину.'})
             return
         parsed = urlparse(self.path)
