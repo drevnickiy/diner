@@ -331,6 +331,16 @@ let authToken = localStorage.getItem('diner_auth_token');
 let authUsername = localStorage.getItem('diner_auth_username');
 let authCar = localStorage.getItem('diner_auth_car');
 
+function getApiUrl(path) {{
+    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {{
+        return path;
+    }}
+    if (window.location.origin.includes('onrender.com')) {{
+        return path;
+    }}
+    return 'https://diner-backend.onrender.com' + path;
+}}
+
 function checkAuthStatus() {{
     const authContainer = document.getElementById('auth-container');
     const mainApp = document.getElementById('main-app');
@@ -362,7 +372,7 @@ async function handleAuth(event, type) {{
     }}
 
     errorEl.style.display = 'none';
-    const endpoint = type === 'login' ? '/api/login' : '/api/register';
+    const endpoint = type === 'login' ? getApiUrl('/api/login') : getApiUrl('/api/register');
     
     let payload = {{ username: usernameEl.value.trim(), password: passwordEl.value }};
     if (type === 'register' && carEl) {{
@@ -402,7 +412,7 @@ async function handleAuth(event, type) {{
 async function handleLogout() {{
     if (authToken) {{
         try {{
-            await fetch('/api/logout', {{
+            await fetch(getApiUrl('/api/logout'), {{
                 method: 'POST',
                 headers: {{ 'Authorization': `Bearer ${{authToken}}` }}
             }});
@@ -575,7 +585,7 @@ async function fetchVotes() {{
         if (authToken) {{
             headers['Authorization'] = `Bearer ${{authToken}}`;
         }}
-        const res = await fetch('/api/votes', {{ headers }});
+        const res = await fetch(getApiUrl('/api/votes'), {{ headers }});
         if (res.status === 401) {{ handleLogout(); return; }}
         const data = await res.json();
         if (data.success) {{
@@ -872,7 +882,7 @@ async function handleVoteSubmit(event) {{
 
     // 3. Background Local Server Sync
     try {{
-        fetch('/api/votes', {{
+        fetch(getApiUrl('/api/votes'), {{
             method: 'POST',
             headers: {{ 
                 'Content-Type': 'application/json',
@@ -920,7 +930,7 @@ async function deleteVote(name) {{
 
     // 3. Background Local Server Sync
     try {{
-        fetch(`/api/votes`, {{ 
+        fetch(getApiUrl('/api/votes'), {{ 
             method: 'DELETE',
             headers: {{ 'Authorization': `Bearer ${{authToken}}` }}
         }})
