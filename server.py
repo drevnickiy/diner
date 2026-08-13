@@ -71,11 +71,13 @@ class VotingHandler(SimpleHTTPRequestHandler):
         return db.get_user_by_token(token)
 
     def _send_json(self, status, data):
+        body_bytes = json.dumps(data, ensure_ascii=False).encode('utf-8')
         self.send_response(status)
         self.send_header('Content-Type', 'application/json; charset=utf-8')
+        self.send_header('Content-Length', str(len(body_bytes)))
         self._set_cors_headers()
         self.end_headers()
-        self.wfile.write(json.dumps(data, ensure_ascii=False).encode('utf-8'))
+        self.wfile.write(body_bytes)
 
     def do_GET(self):
         
