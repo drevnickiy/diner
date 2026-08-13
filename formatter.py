@@ -345,17 +345,17 @@ function checkAuthStatus() {{
     const authContainer = document.getElementById('auth-container');
     const mainApp = document.getElementById('main-app');
     
+    if (mainApp) mainApp.style.display = 'block';
+    
     if (authToken) {{
-        authContainer.style.display = 'none';
-        mainApp.style.display = 'block';
+        if (authContainer) authContainer.style.display = 'none';
         if (authCar && document.getElementById('vote-car')) {{
             document.getElementById('vote-car').value = authCar;
         }}
-        fetchVotes();
     }} else {{
-        authContainer.style.display = 'block';
-        mainApp.style.display = 'none';
+        if (authContainer) authContainer.style.display = 'block';
     }}
+    fetchVotes();
 }}
 
 async function handleAuth(event, type) {{
