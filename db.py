@@ -162,7 +162,13 @@ def get_votes(vote_date=None):
             
         execute(cursor, 'SELECT id, vote_date, name, choice, restaurant, car, role, note, updated_at FROM votes WHERE vote_date = ? ORDER BY updated_at ASC', (vote_date,))
         rows = cursor.fetchall()
-        return [dict(row) for row in rows]
+        res = []
+        for row in rows:
+            d = dict(row)
+            if isinstance(d.get('updated_at'), datetime):
+                d['updated_at'] = d['updated_at'].strftime('%Y-%m-%d %H:%M:%S')
+            res.append(d)
+        return res
 
 def upsert_vote(name, choice, restaurant='', car='', role='', note='', vote_date=None):
     if not name or not name.strip():
