@@ -12,7 +12,7 @@ if IS_POSTGRES:
     import psycopg2.extras
 else:
     import sqlite3
-    DB_PATH = os.path.join(os.path.dirname(__file__), 'votes.db')
+DB_PATH = os.path.join(os.path.dirname(__file__), 'votes.db')
 
 class DBConnection:
     def __init__(self):
@@ -20,11 +20,15 @@ class DBConnection:
         
     def __enter__(self):
         if IS_POSTGRES:
-            self.conn = psycopg2.connect(DATABASE_URL)
-            self.conn.autocommit = False
-        else:
-            self.conn = sqlite3.connect(DB_PATH)
-            self.conn.row_factory = sqlite3.Row
+            try:
+                self.conn = psycopg2.connect(DATABASE_URL)
+                self.conn.autocommit = False
+                return self.conn
+            except Exception as e:
+                print(f"PostgreSQL connection error: {e}. Falling back to SQLite.", file=sys.stderr)
+        
+        self.conn = sqlite3.connect(DB_PATH)
+        self.conn.row_factory = sqlite3.Row
         return self.conn
         
     def __exit__(self, exc_type, exc_val, exc_tb):
@@ -41,7 +45,7 @@ def get_connection():
     return DBConnection()
 
 def execute(cursor, query, params=()):
-    if IS_POSTGRES:
+    if hasattr(cursor, 'mogrify'):
         query = query.replace('?', '%s')
     cursor.execute(query, params)
 

@@ -96,17 +96,20 @@ class VotingHandler(SimpleHTTPRequestHandler):
             else:
                 self._send_json(401, {'success': False, 'error': 'Unauthorized'})
         elif parsed.path == '/api/votes':
-            params = parse_qs(parsed.query)
-            vote_date = params.get('date', [None])[0]
-            votes = db.get_votes(vote_date)
-            
-            response_data = {
-                'success': True,
-                'date': vote_date or db.get_today_date_str(),
-                'votes': votes,
-                'summary': self._calculate_summary(votes)
-            }
-            self._send_json(200, response_data)
+            try:
+                params = parse_qs(parsed.query)
+                vote_date = params.get('date', [None])[0]
+                votes = db.get_votes(vote_date)
+                
+                response_data = {
+                    'success': True,
+                    'date': vote_date or db.get_today_date_str(),
+                    'votes': votes,
+                    'summary': self._calculate_summary(votes)
+                }
+                self._send_json(200, response_data)
+            except Exception as e:
+                self._send_json(500, {'success': False, 'error': str(e)})
         else:
             super().do_GET()
 
