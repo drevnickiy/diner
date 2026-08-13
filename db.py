@@ -41,6 +41,9 @@ class DBConnection:
             finally:
                 self.conn.close()
 
+def is_postgres_conn(conn):
+    return hasattr(conn, 'cursor_factory') or (hasattr(conn, '__class__') and conn.__class__.__module__.startswith('psycopg2'))
+
 def get_connection():
     return DBConnection()
 
@@ -152,7 +155,7 @@ def get_votes(vote_date=None):
         vote_date = get_today_date_str()
     
     with get_connection() as conn:
-        if IS_POSTGRES:
+        if is_postgres_conn(conn):
             cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
         else:
             cursor = conn.cursor()
@@ -267,7 +270,7 @@ def login_user(username, password):
     username = username.strip().upper()
     
     with get_connection() as conn:
-        if IS_POSTGRES:
+        if is_postgres_conn(conn):
             cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
         else:
             cursor = conn.cursor()
@@ -302,15 +305,13 @@ def get_user_by_token(token):
     if not token:
         return None
     with get_connection() as conn:
-        if IS_POSTGRES:
+        is_pg = is_postgres_conn(conn)
+        if is_pg:
             cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+            query = "SELECT s.username, u.car FROM sessions s JOIN users u ON s.username = u.username WHERE s.token = ? AND s.created_at >= NOW() - INTERVAL '30 days'"
         else:
             cursor = conn.cursor()
-            
-        if IS_POSTGRES:
-            query = "SELECT s.username, u.car FROM sessions s JOIN users u ON s.username = u.username WHERE s.token = ? AND s.created_at >= NOW() - INTERVAL '2 minutes'"
-        else:
-            query = "SELECT s.username, u.car FROM sessions s JOIN users u ON s.username = u.username WHERE s.token = ? AND s.created_at >= datetime('now', '-2 minutes')"
+            query = "SELECT s.username, u.car FROM sessions s JOIN users u ON s.username = u.username WHERE s.token = ? AND s.created_at >= datetime('now', '-30 days')"
             
         execute(cursor, query, (token,))
         row = cursor.fetchone()
