@@ -6,26 +6,29 @@
     <title>Бізнес-ланчі в Черкасах</title>
 </head>
 <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f1f5f9; margin: 0; padding: 24px 12px;">
-    <!-- Auth Container -->
-    <div id="auth-container" style="max-width: 400px; margin: 60px auto; background: #ffffff; padding: 32px; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); display: none;">
-        <h2 style="text-align: center; color: #0f172a; margin-top: 0;">Вхід у систему</h2>
-        <form id="auth-form" action="javascript:void(0);" style="display: flex; flex-direction: column; gap: 16px;">
-            <div>
-                <label style="display: block; font-size: 13px; font-weight: 700; color: #334155; margin-bottom: 6px;">Логін</label>
-                <input type="text" id="auth-username" required style="width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; box-sizing: border-box; text-transform: uppercase;">
-            </div>
-            <div>
-                <label style="display: block; font-size: 13px; font-weight: 700; color: #334155; margin-bottom: 6px;">Пароль</label>
-                <input type="password" id="auth-password" required style="width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; box-sizing: border-box;">
-            </div>
-            <div>
-                <label style="display: block; font-size: 13px; font-weight: 700; color: #334155; margin-bottom: 6px;">Автомобіль (опціонально при реєстрації)</label>
-                <input type="text" id="auth-car" placeholder="Наприклад: Skoda Fabia" style="width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; box-sizing: border-box;">
-            </div>
-            <div id="auth-error" style="color: #ef4444; font-size: 13px; font-weight: 600; text-align: center; display: none;"></div>
-            <button type="submit" id="auth-login-btn" onclick="handleAuth(event, 'login')" style="background: #2563eb; color: #fff; border: none; padding: 12px; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 15px;">Увійти</button>
-            <button type="button" id="auth-register-btn" onclick="handleAuth(event, 'register')" style="background: #ffffff; color: #2563eb; border: 2px solid #2563eb; padding: 12px; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 15px;">Зареєструватися</button>
-        </form>
+    <!-- Auth Modal Overlay -->
+    <div id="auth-container" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(15,23,42,0.6); backdrop-filter: blur(4px); display: none; align-items: center; justify-content: center; z-index: 10000;">
+        <div style="max-width: 400px; width: 90%; background: #ffffff; padding: 32px; border-radius: 16px; box-shadow: 0 20px 40px rgba(0,0,0,0.25); position: relative;">
+            <button onclick="hideAuthModal()" style="position: absolute; top: 16px; right: 16px; background: none; border: none; font-size: 20px; color: #64748b; cursor: pointer;">✕</button>
+            <h2 style="text-align: center; color: #0f172a; margin-top: 0;">Вхід у систему</h2>
+            <form id="auth-form" action="javascript:void(0);" style="display: flex; flex-direction: column; gap: 16px;">
+                <div>
+                    <label style="display: block; font-size: 13px; font-weight: 700; color: #334155; margin-bottom: 6px;">Логін</label>
+                    <input type="text" id="auth-username" required style="width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; box-sizing: border-box; text-transform: uppercase;">
+                </div>
+                <div>
+                    <label style="display: block; font-size: 13px; font-weight: 700; color: #334155; margin-bottom: 6px;">Пароль</label>
+                    <input type="password" id="auth-password" required style="width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; box-sizing: border-box;">
+                </div>
+                <div>
+                    <label style="display: block; font-size: 13px; font-weight: 700; color: #334155; margin-bottom: 6px;">Автомобіль (опціонально при реєстрації)</label>
+                    <input type="text" id="auth-car" placeholder="Наприклад: Skoda Fabia" style="width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; box-sizing: border-box;">
+                </div>
+                <div id="auth-error" style="color: #ef4444; font-size: 13px; font-weight: 600; text-align: center; display: none;"></div>
+                <button type="submit" id="auth-login-btn" onclick="handleAuth(event, 'login')" style="background: #2563eb; color: #fff; border: none; padding: 12px; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 15px;">Увійти</button>
+                <button type="button" id="auth-register-btn" onclick="handleAuth(event, 'register')" style="background: #ffffff; color: #2563eb; border: 2px solid #2563eb; padding: 12px; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 15px;">Зареєструватися</button>
+            </form>
+        </div>
     </div>
 
     <!-- Main App Container -->
@@ -37,9 +40,9 @@
                 <span style="background: rgba(255,255,255,0.15); padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; display: inline-block;">
                     📅 13.08.2026 • Четвер
                 </span>
-                <button onclick="handleLogout()" style="background: rgba(239, 68, 68, 0.8); color: white; border: none; padding: 4px 12px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; transition: background 0.2s;">
-                    Вийти 🚪
-                </button>
+                <div id="user-info-header" style="display: flex; align-items: center; gap: 8px;">
+                    <!-- Filled by JS -->
+                </div>
             </div>
             <h1 style="margin: 6px 0 0 0; font-size: 26px; font-weight: 800; letter-spacing: -0.5px;">
                 🍱 Меню бізнес-ланчів на тиждень
@@ -455,19 +458,44 @@ function getApiUrl(path) {
     return 'https://diner-backend.onrender.com' + path;
 }
 
+function showAuthModal() {
+    const authContainer = document.getElementById('auth-container');
+    if (authContainer) authContainer.style.display = 'flex';
+}
+
+function hideAuthModal() {
+    const authContainer = document.getElementById('auth-container');
+    if (authContainer) authContainer.style.display = 'none';
+}
+
 function checkAuthStatus() {
     const authContainer = document.getElementById('auth-container');
     const mainApp = document.getElementById('main-app');
+    const userHeader = document.getElementById('user-info-header');
     
     if (mainApp) mainApp.style.display = 'block';
     
     if (authToken) {
         if (authContainer) authContainer.style.display = 'none';
+        if (userHeader) {
+            userHeader.innerHTML = `
+                <span style="font-size: 13px; font-weight: 700; background: rgba(255,255,255,0.2); padding: 4px 10px; border-radius: 12px;">👤 ${escapeHtml(authUsername)}</span>
+                <button onclick="handleLogout()" style="background: rgba(239, 68, 68, 0.8); color: white; border: none; padding: 4px 12px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer;">
+                    Вийти 🚪
+                </button>
+            `;
+        }
         if (authCar && document.getElementById('vote-car')) {
             document.getElementById('vote-car').value = authCar;
         }
     } else {
-        if (authContainer) authContainer.style.display = 'block';
+        if (userHeader) {
+            userHeader.innerHTML = `
+                <button onclick="showAuthModal()" style="background: #2563eb; color: white; border: none; padding: 6px 14px; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer;">
+                    🔑 Увійти / Зареєструватися
+                </button>
+            `;
+        }
     }
     fetchVotes();
 }
