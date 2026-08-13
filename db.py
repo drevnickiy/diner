@@ -163,7 +163,7 @@ def upsert_vote(name, choice, restaurant='', car='', role='', note='', vote_date
     if choice not in ['going', 'not_going']:
         raise ValueError("Некорректный выбор (ожидается 'going' или 'not_going').")
 
-    name = name.strip()
+    name = name.strip().upper()
     restaurant = restaurant.strip() if restaurant else ''
     car = car.strip() if car else ''
     role = role.strip() if role else ''
@@ -239,7 +239,7 @@ def _hash_password(password, salt):
     return hashlib.pbkdf2_hmac('sha256', password.encode('utf-8'), salt, 100000).hex()
 
 def register_user(username, password, car=''):
-    username = username.strip()
+    username = username.strip().upper()
     car = car.strip() if car else ''
     if not username or not password:
         raise ValueError("Ім'я та пароль не можуть бути порожніми.")
@@ -260,7 +260,7 @@ def register_user(username, password, car=''):
     return token, username, car
 
 def login_user(username, password):
-    username = username.strip()
+    username = username.strip().upper()
     
     with get_connection() as conn:
         if IS_POSTGRES:

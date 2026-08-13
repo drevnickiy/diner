@@ -87,7 +87,7 @@ def generate_html_report(restaurants_data, target_day=None):
         <form id="auth-form" action="javascript:void(0);" style="display: flex; flex-direction: column; gap: 16px;">
             <div>
                 <label style="display: block; font-size: 13px; font-weight: 700; color: #334155; margin-bottom: 6px;">Логін</label>
-                <input type="text" id="auth-username" required style="width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; box-sizing: border-box;">
+                <input type="text" id="auth-username" required style="width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; box-sizing: border-box; text-transform: uppercase;">
             </div>
             <div>
                 <label style="display: block; font-size: 13px; font-weight: 700; color: #334155; margin-bottom: 6px;">Пароль</label>
@@ -137,7 +137,7 @@ def generate_html_report(restaurants_data, target_day=None):
                         🚗 Голосування: Їдемо чи Не їдемо?
                     </h2>
                     <p style="margin: 4px 0 0 0; font-size: 13px; color: #64748b;">
-                        Обирайте заклад, вводьте ім'я та голосуйте! ⏰ <strong>Час голосування: в будь-який час</strong>
+                        Обирайте заклад, вводьте ім'я та голосуйте! ⏰ <strong>Час голосування: Цілий день</strong>
                     </p>
                     <div id="voting-time-status" style="margin-top: 8px; display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 700;">
                         <!-- Dynamic status inserted by JS -->
@@ -374,7 +374,7 @@ async function handleAuth(event, type) {{
     errorEl.style.display = 'none';
     const endpoint = type === 'login' ? getApiUrl('/api/login') : getApiUrl('/api/register');
     
-    let payload = {{ username: usernameEl.value.trim(), password: passwordEl.value }};
+    let payload = {{ username: usernameEl.value.trim().toUpperCase(), password: passwordEl.value }};
     if (type === 'register' && carEl) {{
         payload.car = carEl.value.trim();
     }}
@@ -488,7 +488,7 @@ function updateTimeStatus() {{
         statusEl.style.background = '#dcfce7';
         statusEl.style.color = '#15803d';
         statusEl.style.border = '1px solid #86efac';
-        statusEl.innerHTML = `🟢 <strong>Голосування ВІДКРИТЕ</strong> (Зараз ${{timeStr}} Київ • в будь-який час)`;
+        statusEl.innerHTML = `🟢 <strong>Голосування ВІДКРИТЕ</strong> (Цілий день)`;
     }}
 
     if (submitBtn) {{
@@ -961,7 +961,7 @@ function copyVotesForTelegram() {{
 
     let lines = [];
     lines.push('🍱 *Голосування на обід (' + todayStr + ')*');
-    lines.push('⏰ _Час голосування: в будь-який час_');
+    lines.push('⏰ _Час голосування: Цілий день_');
     lines.push('');
     lines.push('🚗 *Їдемо (' + going.length + '):*');
     if (going.length > 0) {{

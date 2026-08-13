@@ -125,7 +125,7 @@ class VotingHandler(SimpleHTTPRequestHandler):
             body = self.rfile.read(content_length).decode('utf-8')
             try:
                 data = json.loads(body)
-                username = data.get('username')
+                username = (data.get('username') or '').strip().upper()
                 password = data.get('password')
                 if parsed.path == '/api/register':
                     car = data.get('car', '')
