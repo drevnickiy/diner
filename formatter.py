@@ -441,9 +441,7 @@ document.addEventListener('DOMContentLoaded', () => {{
     updateTimeStatus();
     checkAuthStatus();
     setInterval(updateTimeStatus, 60000); // Check time every minute
-    
-    // fetchVotes is now called inside checkAuthStatus if logged in
-    // Automatic polling is disabled. Users must refresh manually or vote to see updates.
+    setInterval(fetchVotes, 5000); // Poll for votes every 5 seconds
     initFireworksCanvas();
 }});
 
@@ -571,13 +569,16 @@ async function fetchVotes() {{
 
     // 2. Local Server Fallback
     try {{
-        const res = await fetch('/api/votes', {{
-            headers: {{ 'Authorization': `Bearer ${{authToken}}` }}
-        }});
+        const headers = {{}};
+        if (authToken) {{
+            headers['Authorization'] = `Bearer ${{authToken}}`;
+        }}
+        const res = await fetch('/api/votes', {{ headers }});
         if (res.status === 401) {{ handleLogout(); return; }}
         const data = await res.json();
         if (data.success) {{
             currentVotes = data.votes || [];
+            saveToLocalStorage(currentVotes);
             renderVotes(currentVotes, data.summary);
             return;
         }}

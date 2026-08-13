@@ -137,7 +137,11 @@ def seed_users():
         conn.commit()
 
 def get_today_date_str():
-    return datetime.now().strftime('%Y-%m-%d')
+    try:
+        from zoneinfo import ZoneInfo
+        return datetime.now(ZoneInfo("Europe/Kyiv")).strftime('%Y-%m-%d')
+    except Exception:
+        return datetime.now().strftime('%Y-%m-%d')
 
 def get_votes(vote_date=None):
     if not vote_date:
