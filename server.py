@@ -22,16 +22,7 @@ class VotingHandler(SimpleHTTPRequestHandler):
         public_dir = os.path.join(os.path.dirname(__file__), 'public')
         super().__init__(*args, directory=public_dir, **kwargs)
 
-    def _check_rate_limit(self, limit=30):
-        client_ip = self.client_address[0]
-        now = time.time()
-        key = f"{client_ip}_{self.command}"
-        if key not in ip_requests:
-            ip_requests[key] = []
-        ip_requests[key] = [t for t in ip_requests[key] if now - t < 60]
-        if len(ip_requests[key]) >= limit:
-            return False
-        ip_requests[key].append(now)
+    def _check_rate_limit(self, limit=None):
         return True
 
     def _set_cors_headers(self):
