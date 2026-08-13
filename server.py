@@ -22,7 +22,7 @@ class VotingHandler(SimpleHTTPRequestHandler):
         public_dir = os.path.join(os.path.dirname(__file__), 'public')
         super().__init__(*args, directory=public_dir, **kwargs)
 
-    def _check_rate_limit(self, limit=5):
+    def _check_rate_limit(self, limit=30):
         client_ip = self.client_address[0]
         now = time.time()
         key = f"{client_ip}_{self.command}"
@@ -88,7 +88,7 @@ class VotingHandler(SimpleHTTPRequestHandler):
 
     def do_GET(self):
         
-        if not self._check_rate_limit(limit=60):
+        if not self._check_rate_limit(limit=30):
             self._send_json(429, {'success': False, 'error': 'Забагато запитів. Зачекайте 1 хвилину.'})
             return
         parsed = urlparse(self.path)
@@ -115,7 +115,7 @@ class VotingHandler(SimpleHTTPRequestHandler):
 
     def do_POST(self):
         
-        if not self._check_rate_limit():
+        if not self._check_rate_limit(limit=30):
             self._send_json(429, {'success': False, 'error': 'Забагато запитів. Зачекайте 1 хвилину.'})
             return
         parsed = urlparse(self.path)
@@ -187,7 +187,7 @@ class VotingHandler(SimpleHTTPRequestHandler):
 
     def do_DELETE(self):
         
-        if not self._check_rate_limit():
+        if not self._check_rate_limit(limit=30):
             self._send_json(429, {'success': False, 'error': 'Забагато запитів. Зачекайте 1 хвилину.'})
             return
         parsed = urlparse(self.path)
