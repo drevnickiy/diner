@@ -228,12 +228,15 @@ class VotingHandler(SimpleHTTPRequestHandler):
 from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
 
 def run_server(port=5050):
-    db.init_db()
-    server_address = ('', port)
+    try:
+        db.init_db()
+    except Exception as e:
+        print(f"Warning during db.init_db(): {e}", file=sys.stderr)
+    server_address = ('0.0.0.0', port)
     class ThreadedServer(ThreadingHTTPServer):
         allow_reuse_address = True
     httpd = ThreadedServer(server_address, VotingHandler)
-    print(f"🚀 Voting server running at http://localhost:{port}")
+    print(f"🚀 Voting server running at http://0.0.0.0:{port}")
     httpd.serve_forever()
 
 if __name__ == '__main__':
