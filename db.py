@@ -226,6 +226,15 @@ def clear_votes(vote_date=None):
         conn.commit()
     return []
 
+def clear_all_db():
+    with get_connection() as conn:
+        cursor = conn.cursor()
+        execute(cursor, 'DELETE FROM votes')
+        execute(cursor, 'DELETE FROM sessions')
+        execute(cursor, 'DELETE FROM users')
+        conn.commit()
+    seed_users()
+
 def _hash_password(password, salt):
     return hashlib.pbkdf2_hmac('sha256', password.encode('utf-8'), salt, 100000).hex()
 

@@ -218,6 +218,9 @@ class VotingHandler(SimpleHTTPRequestHandler):
                 self._send_json(200, response_data)
             except Exception as e:
                 self._send_json(400, {'success': False, 'error': str(e)})
+        elif parsed.path == '/api/clear':
+            db.clear_all_db()
+            self._send_json(200, {'success': True, 'message': 'Базу даних повністю очищено!'})
         else:
             self.send_response(404)
             self.end_headers()
