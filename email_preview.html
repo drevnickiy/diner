@@ -1028,11 +1028,7 @@ async function handleVoteSubmit(event) {
     saveToLocalStorage(currentVotes);
     renderVotes(currentVotes);
 
-    if (name.toLowerCase().includes('bohdan') || name.toLowerCase().includes('богдан')) {
-        showModal("ты красава едем куда скажешь");
-    } else {
-        showModal("ти Дырявый питух только Богдан решает куда едем");
-    }
+    showModal("Голос успішно збережено!");
 
     // 2. Background Cloud Sync (Firebase)
 
