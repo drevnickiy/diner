@@ -137,7 +137,7 @@ def generate_html_report(restaurants_data, target_day=None):
                         🚗 Голосування: Їдемо чи Не їдемо?
                     </h2>
                     <p style="margin: 4px 0 0 0; font-size: 13px; color: #64748b;">
-                        Обирайте заклад, вводьте ім'я та голосуйте! ⏰ <strong>Час голосування: 11:30 – 12:00 (Київ)</strong>
+                        Обирайте заклад, вводьте ім'я та голосуйте! ⏰ <strong>Час голосування: в будь-який час</strong>
                     </p>
                     <div id="voting-time-status" style="margin-top: 8px; display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 700;">
                         <!-- Dynamic status inserted by JS -->
@@ -464,7 +464,7 @@ function getKyivTimeInfo() {{
         if (p.type === 'second') second = parseInt(p.value, 10);
     }});
     const totalMinutes = hour * 60 + minute;
-    const isOpen = totalMinutes >= 690 && totalMinutes < 720;
+    const isOpen = true;
     const timeStr = `${{String(hour).padStart(2, '0')}}:${{String(minute).padStart(2, '0')}}:${{String(second).padStart(2, '0')}}`;
     return {{ isOpen, timeStr, hour, minute }};
 }}
@@ -475,31 +475,17 @@ function updateTimeStatus() {{
     const {{ isOpen, timeStr }} = getKyivTimeInfo();
     
     if (statusEl) {{
-        if (isOpen) {{
-            statusEl.style.background = '#dcfce7';
-            statusEl.style.color = '#15803d';
-            statusEl.style.border = '1px solid #86efac';
-            statusEl.innerHTML = `🟢 <strong>Голосування ВІДКРИТЕ</strong> (Зараз ${{timeStr}} Київ • 11:30 – 12:00)`;
-        }} else {{
-            statusEl.style.background = '#fef2f2';
-            statusEl.style.color = '#b91c1c';
-            statusEl.style.border = '1px solid #fca5a5';
-            statusEl.innerHTML = `🔴 <strong>Голосування ЗАКРИТЕ</strong> (Зараз ${{timeStr}} Київ • Приймається з 11:30 до 12:00)`;
-        }}
+        statusEl.style.background = '#dcfce7';
+        statusEl.style.color = '#15803d';
+        statusEl.style.border = '1px solid #86efac';
+        statusEl.innerHTML = `🟢 <strong>Голосування ВІДКРИТЕ</strong> (Зараз ${{timeStr}} Київ • в будь-який час)`;
     }}
 
     if (submitBtn) {{
-        if (!isOpen) {{
-            submitBtn.disabled = true;
-            submitBtn.style.opacity = '0.55';
-            submitBtn.style.cursor = 'not-allowed';
-            submitBtn.innerText = '🔒 Голосування закрите (11:30 - 12:00)';
-        }} else {{
-            submitBtn.disabled = false;
-            submitBtn.style.opacity = '1';
-            submitBtn.style.cursor = 'pointer';
-            submitBtn.innerText = '🗳️ Проголосувати / Оновити';
-        }}
+        submitBtn.disabled = false;
+        submitBtn.style.opacity = '1';
+        submitBtn.style.cursor = 'pointer';
+        submitBtn.innerText = '🗳️ Проголосувати / Оновити';
     }}
 }}
 
@@ -798,10 +784,6 @@ async function handleVoteSubmit(event) {{
     }}
     
     const {{ isOpen, timeStr }} = getKyivTimeInfo();
-    if (!isOpen) {{
-        showModal(`⛔ Голосування закрите!\n\nЗараз ${{timeStr}} за київським часом.\nОфіційне голосування відкрите виключно з 11:30 до 12:00.`, true);
-        return false;
-    }}
 
     const name = authUsername; // Inferred from session
 
@@ -952,7 +934,7 @@ function copyVotesForTelegram() {{
 
     let lines = [];
     lines.push('🍱 *Голосування на обід (' + todayStr + ')*');
-    lines.push('⏰ _Час голосування: 11:30 - 12:00 (Київ)_');
+    lines.push('⏰ _Час голосування: в будь-який час_');
     lines.push('');
     lines.push('🚗 *Їдемо (' + going.length + '):*');
     if (going.length > 0) {{
