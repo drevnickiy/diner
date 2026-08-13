@@ -144,6 +144,9 @@ def generate_html_report(restaurants_data, target_day=None):
                     </div>
                 </div>
                 <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                    <button id="refresh-votes-btn" onclick="refreshVotesManual()" style="background: #10b981; color: #ffffff; border: none; padding: 8px 14px; border-radius: 8px; font-weight: 600; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: all 0.2s;">
+                        🔄 Оновити голоси
+                    </button>
                     <button id="fireworks-btn" onclick="launchFireworks()" style="background: linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%); color: #ffffff; border: none; padding: 8px 14px; border-radius: 8px; font-weight: 700; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 4px 12px rgba(236,72,153,0.3); transition: transform 0.1s;">
                         🎆 Феєрверк!
                     </button>
@@ -441,7 +444,6 @@ document.addEventListener('DOMContentLoaded', () => {{
     updateTimeStatus();
     checkAuthStatus();
     setInterval(updateTimeStatus, 60000); // Check time every minute
-    setInterval(fetchVotes, 5000); // Poll for votes every 5 seconds
     initFireworksCanvas();
 }});
 
@@ -586,6 +588,20 @@ async function fetchVotes() {{
 
     // 3. LocalStorage Fallback
     loadFromLocalStorage();
+}}
+
+async function refreshVotesManual() {{
+    const btn = document.getElementById('refresh-votes-btn');
+    if (btn) {{
+        btn.innerText = '🔄 Оновлення...';
+        btn.disabled = true;
+    }}
+    await fetchVotes();
+    showToast('🔄 Голоси оновлено!');
+    if (btn) {{
+        btn.innerText = '🔄 Оновити голоси';
+        btn.disabled = false;
+    }}
 }}
 
 function loadFromLocalStorage() {{
