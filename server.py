@@ -78,6 +78,10 @@ class VotingHandler(SimpleHTTPRequestHandler):
         self._set_cors_headers()
         self.end_headers()
         self.wfile.write(body_bytes)
+        try:
+            self.wfile.flush()
+        except Exception:
+            pass
 
     def do_GET(self):
         
